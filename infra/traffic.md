@@ -60,4 +60,4 @@ Every new game transaction checks the owner switch. A request that already creat
 
 ## Respond to sustained throttling
 
-The [alarm](traffic-alarm.md) counts throttled requests on the game function. Look at the affected minutes alongside starts, moves and DynamoDB throttling. If new games are competing with players taking turns, pause starts, confirm an existing match can still resume, and reopen creation when the surge passes. Keep the concurrency and table limits in place while investigating. Only the owner’s AWS role can operate the switch.
+The [alarm](traffic-alarm.md) counts throttled requests on the game function. For the affected minutes, compare Lambda `Invocations` and `Throttles`, DynamoDB `ReadThrottleEvents` and `WriteThrottleEvents`, and `scope=traffic` warnings in the game’s log group. A warning identifies the affected request category. If new games are competing with players taking turns, pause starts, confirm an existing match can still resume, and reopen creation when the surge passes. Keep the concurrency and table limits in place while investigating. Only the owner’s AWS role can operate the switch.
