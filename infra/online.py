@@ -41,14 +41,14 @@ def run_git(*args):
     return subprocess.check_output(["git", "-C", str(ROOT), *args], text=True).strip()
 
 
-def aws(service, operation, payload, extra=()):
+def aws(service, operation, payload):
     # Use a real mode-0600 file. The factory CLI transport does not forward piped stdin.
     with tempfile.NamedTemporaryFile(mode="w", encoding="utf8", suffix=".json") as request:
         json.dump(payload, request)
         request.flush()
         command = ["aws", service, operation, "--no-cli-pager", "--output", "json",
                    "--cli-connect-timeout", "5", "--cli-read-timeout", "30",
-                   "--cli-input-json", "file://" + request.name, *extra]
+                   "--cli-input-json", "file://" + request.name]
         process = subprocess.run(command, text=True, capture_output=True, timeout=45)
     if process.returncode:
         match = re.search(r"An error occurred \(([^)]+)\)", process.stderr)
@@ -261,8 +261,13 @@ class Deployment:
                  "headers": {"authorization": "Bearer " + secrets.token_urlsafe(32)}}
         with tempfile.TemporaryDirectory(dir=self.path.parent) as tmp:
             output = Path(tmp) / "result"
-            response = aws("lambda", "invoke", {"FunctionName": self.name, "Payload": base64.b64encode(
-                json.dumps(event).encode()).decode()}, extra=(str(output),))
+            invocation = Path(tmp) / "event.json"
+            invocation.write_text(json.dumps(event))
+            process = subprocess.run(["aws", "lambda", "invoke", "--function-name", self.name,
+                "--payload", "fileb://" + str(invocation), "--no-cli-pager", "--output", "json",
+                str(output)], capture_output=True, text=True, timeout=45)
+            require(process.returncode == 0, "Private Lambda invocation request failed")
+            response = json.loads(process.stdout)
             require("FunctionError" not in response, "Lambda handler failed private invocation")
             actual = json.loads(output.read_text())
             require(actual["statusCode"] == 200 and expected in actual["body"], f"Private probe failed on {path}")
