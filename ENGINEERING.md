@@ -28,6 +28,10 @@ The phase-two engine can resume a partial round in a sampled hidden world and co
 
 The coach reads its default paper rule and optional whole-match model from `web/release.json`. `npm run phase2:verify` recomputes the league statistics from compressed shuffle blocks and verifies the shipped choices. Only new board sessions adopt the new family default. Existing valid saved sessions retain the selected strategy. The release includes both printable rules and a printable, anonymous family comparison sheet. All research used the existing workspace CPU. Estimated additional AWS cost was $0.
 
+## Forge publication
+
+The [Forge publication record](https://github.com/The-CarL/carloperottino-forge/pull/26) tracks the article and screenshot through review and deployment. Forge owns `src/content/projects/skyjo-strategy-lab.md` and `public/projects/skyjo-strategy-lab/clear-or-trade.png` for the catalog route `forge.carloperottino.com/projects/skyjo-strategy-lab`. The family kit is served from this application repository.
+
 ## Factory guidance
 
 - [Product co-architecture](https://github.com/The-CarL/engineering-factory/blob/14ed9d222230ae85dd14b9baaf2a754e309b982f/standards/product-architecture.md)
