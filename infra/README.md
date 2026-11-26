@@ -74,6 +74,8 @@ Run this command for `certificate`, then `distribution` after ACM issues the cer
 CloudFront's monthly pay-as-you-go charges depend on request volume and bytes delivered. The ACM public certificate for this distribution, SNI TLS, and alias lookups to CloudFront have no separate fixed monthly charge. The existing hosted zone and Lambda service are reused. At the family-scale example above, 10,000 North American HTTPS requests and 250 MB of outbound traffic add approximately $0.03 before free allowances. [CloudFront pricing](https://aws.amazon.com/cloudfront/pricing/pay-as-you-go/) · [ACM pricing](https://aws.amazon.com/certificate-manager/pricing/)
 
 
+For owner alerts, rate controls and the new-game pause procedure, see the [traffic operations guide](traffic.md).
+
 ## Sign origin traffic and cache the public assets
 
 Use the compatibility release before changing distribution routing. It sends the existing recovery key as `X-Skyjo-Profile` and hashes the exact serialized bytes for every body-bearing write into `X-Amz-Content-Sha256`. CloudFront can then use `Authorization` for its own SigV4 signature. The game data, profile hashes and recovery codes are unchanged. On the original Lambda hostname, the compatibility release shows a migration notice and a recovery-key dialog. Save that key and restore it on the canonical hostname before closing direct access.
