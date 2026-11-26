@@ -6,6 +6,8 @@ import type {
   TurnEvent,
 } from '../src/online-match.ts'
 
+import { rememberRetry, requestGroup, retryAt, waitMessage } from './retry.ts'
+
 type Game = PublicMatch & { id: string; createdAt: string; updatedAt: string }
 type Player = Game['players'][number]
 type Finished = {
@@ -29,6 +31,7 @@ type Pending = {
   }
 }
 const KEY_STORE = 'skyjo-online-profile-v1'
+const LINEUP_STORE = 'skyjo-online-lineup-v1'
 const PENDING_STORE = 'skyjo-online-pending-v1'
 const GONE = -9
 const app = document.querySelector<HTMLElement>('#app')!
@@ -83,10 +86,30 @@ function uuid() {
     h.slice(20),
   ].join('-')
 }
+function readLineup(): string[] {
+  try {
+    const ids = JSON.parse(readStorage(LINEUP_STORE) ?? 'null')
+    if (
+      Array.isArray(ids) &&
+      ids.length <= 7 &&
+      ids.every((id) => typeof id === 'string')
+    )
+      return ids
+  } catch {
+    /* Start with the default lineup if this local preference is unavailable. */
+  }
+  return []
+}
+const legacyBanner = document.querySelector<HTMLElement>('#legacy-address')
+if (legacyBanner)
+  legacyBanner.hidden =
+    location.origin !==
+    'https://lin3byzlstcyscggn7lkbujkb40iqzec.lambda-url.us-east-1.on.aws'
+
 let key = readStorage(KEY_STORE) ?? ''
 if (!validKey(key)) key = randomKey()
 const persistent = writeStorage(KEY_STORE, key)
-let selected: string[] = []
+let selected = readLineup()
 let engines: EngineInfo[] = []
 let game: Game | null = null,
   detail: Game | null = null,
@@ -114,6 +137,8 @@ try {
 } catch {
   /* A damaged local retry record can be ignored. */
 }
+if (pending?.path === '/api/games' && Array.isArray(pending.body.opponents))
+  selected = [...pending.body.opponents]
 let openSlots: number[] = []
 let mode: 'none' | 'take' | 'swap' | 'flip' = 'none'
 let historyEpoch = 0,
@@ -131,38 +156,69 @@ async function api<T>(
   path: string,
   opts: { body?: unknown; token?: string } = {},
 ): Promise<T> {
+  const write = opts.body !== undefined
+  const group = requestGroup(path, write)
+  const waiting = retryAt(group)
+  if (waiting)
+    throw new ApiError(429, 'rate_limited', waitMessage(waiting))
   const controller = new AbortController(),
     timer = setTimeout(() => controller.abort(), 20000)
   try {
+    const headers: Record<string, string> = { Accept: 'application/json' }
+    if (path !== '/api/engines') headers['X-Skyjo-Profile'] = opts.token ?? key
+    let body
+    if (write) {
+      if (!crypto.subtle)
+        throw new ApiError(
+          400,
+          'secure_context',
+          'Open the game over HTTPS to save a move.',
+        )
+      body = new TextEncoder().encode(JSON.stringify(opts.body))
+      const digest = await crypto.subtle.digest('SHA-256', body)
+      headers['Content-Type'] = 'application/json'
+      headers['X-Amz-Content-Sha256'] = Array.from(
+        new Uint8Array(digest),
+        (byte) => byte.toString(16).padStart(2, '0'),
+      ).join('')
+    }
     const response = await fetch(path, {
-      method: opts.body ? 'POST' : 'GET',
-      headers: {
-        Accept: 'application/json',
-        ...(path === '/api/engines'
-          ? {}
-          : { Authorization: 'Bearer ' + (opts.token ?? key) }),
-        ...(opts.body ? { 'Content-Type': 'application/json' } : {}),
-      },
-      body: opts.body ? JSON.stringify(opts.body) : undefined,
+      method: write ? 'POST' : 'GET',
+      headers,
+      body,
       signal: controller.signal,
       cache: 'no-store',
     })
-    let data
-    try {
-      data = await response.json()
-    } catch {
+    if (response.status === 429) {
+      const time = rememberRetry(group, response.headers.get('Retry-After'), 60)
+      scheduleRetryControls()
+      throw new ApiError(429, 'rate_limited', 'Too many requests. ' + waitMessage(time))
+    }
+    const data = await response.json().catch(() => null)
+    if (
+      response.status === 503 &&
+      group === 'create' &&
+      data?.error?.code === 'new_games_paused'
+    ) {
+      const time = rememberRetry('create', response.headers.get('Retry-After'), 5)
+      scheduleRetryControls()
       throw new ApiError(
-        response.status,
-        'invalid_response',
-        'The game service returned an unreadable response.',
+        503,
+        'new_games_paused',
+        'New games are temporarily paused. Your lineup is saved. ' + waitMessage(time),
       )
     }
     if (!response.ok)
       throw new ApiError(
         response.status,
         data?.error?.code ?? 'request_failed',
-        data?.error?.message ??
-          'The game service could not complete the request.',
+        data?.error?.message ?? 'The game service could not complete the request.',
+      )
+    if (data === null)
+      throw new ApiError(
+        response.status,
+        'invalid_response',
+        'The game service returned an unreadable response.',
       )
     return data as T
   } catch (e) {
@@ -317,11 +373,35 @@ function boardGrid(
     '</div>'
   )
 }
+let retryTimer: number | undefined
+function scheduleRetryControls() {
+  clearTimeout(retryTimer)
+  const times = [retryAt('create'), retryAt('write'), retryAt('read')].filter(Boolean)
+  if (!times.length) return
+  const delay = Math.min(Math.min(...times) - Date.now() + 1, 2_147_483_647)
+  // Re-enable controls locally. Retrying a saved operation is the player's choice.
+  retryTimer = window.setTimeout(() => {
+    render()
+    scheduleRetryControls()
+  }, delay)
+}
 function setNotice() {
   const box = document.querySelector('#notice')!
-  const abandoning = pending?.path.endsWith('/abandon')
+  const retryLabel =
+    pending?.path === '/api/games'
+      ? 'Retry game setup'
+      : pending?.path.endsWith('/abandon')
+        ? 'Retry abandon'
+        : 'Retry saved move'
+  const waiting = pending
+    ? retryAt(requestGroup(pending.path, true))
+    : retryAt('read')
+  const setupWait =
+    !pending && !loading && (!game || settingUp) && retryAt('create')
   const msg =
     notice ||
+    (pending && waiting ? 'Your request is saved. ' + waitMessage(waiting) : '') ||
+    (setupWait ? 'Your lineup is saved. ' + waitMessage(setupWait) : '') ||
     (pending && !busy && !loading
       ? 'A saved request is waiting for confirmation.'
       : '') ||
@@ -333,9 +413,9 @@ function setNotice() {
     ? '<div class="notice-box">' +
       html(msg) +
       (pending && !busy
-        ? btn('retry', abandoning ? 'Retry abandon' : 'Retry saved move', '')
+        ? btn('retry', retryLabel, '', !!waiting || loading)
         : bootFailed && !loading
-          ? btn('reload', 'Retry connection', '')
+          ? btn('reload', 'Retry connection', '', !!waiting)
           : '') +
       '</div>'
     : ''
@@ -454,6 +534,7 @@ function setup() {
         busy ||
         !!pending ||
         !selected.length ||
+        !!retryAt('create') ||
         !engines.length,
     ) +
     '<details class="match-info"><summary>How this match works</summary><p>You play against 1–7 strategy engines. Everyone starts with 12 hidden cards. The lowest total wins when someone reaches 100.</p></details></section></div>'
@@ -916,9 +997,14 @@ async function bootstrap(restored?: { game: Game | null }) {
     selected = selected.filter((id) => engines.some((e) => e.id === id))
     if (!selected.length && engines.length) selected = [engines[0].id]
     loadPosition(current.game)
-    if (pending)
-      notice =
-        'A saved request is waiting for confirmation. Retry it to continue.'
+    if (
+      pending?.path === '/api/games' &&
+      current.game &&
+      current.game.phase !== 'gameOver'
+    )
+      pendingSet(null)
+    if (pending && !retryAt(requestGroup(pending.path, true)))
+      notice = 'A saved request is waiting for confirmation. Retry it to continue.'
   } catch (e) {
     if (epoch === tableEpoch && token === key) {
       bootFailed = true
@@ -962,7 +1048,10 @@ async function submit(request: Pending) {
     pendingSet(null)
   } catch (e) {
     if (token !== key) return
-    if (e instanceof ApiError && [404, 409, 410].includes(e.status)) {
+    if (e instanceof ApiError && e.code === 'new_games_paused') {
+      pendingSet(null)
+      notice = message(e)
+    } else if (e instanceof ApiError && [404, 409, 410].includes(e.status)) {
       pendingSet(null)
       try {
         const path =
@@ -1008,9 +1097,11 @@ function start() {
     pending ||
     loading ||
     bootFailed ||
+    retryAt('create') ||
     (game && game.phase !== 'gameOver')
   )
     return
+  writeStorage(LINEUP_STORE, JSON.stringify(selected))
   void submit({
     path: '/api/games',
     body: { requestId: uuid(), opponents: [...selected] },
@@ -1363,6 +1454,7 @@ document.addEventListener('click', (e) => {
     selected.length > 1
   ) {
     selected.splice(Number(el.dataset.remove), 1)
+    writeStorage(LINEUP_STORE, JSON.stringify(selected))
     render()
     return
   }
@@ -1381,6 +1473,7 @@ function setPlayerCount(total: number) {
       engines.find((engine) => !selected.includes(engine.id)) ?? engines[0]
     selected.push(next.id)
   }
+  writeStorage(LINEUP_STORE, JSON.stringify(selected))
   render()
 }
 document.addEventListener('change', (e) => {
@@ -1404,6 +1497,7 @@ document.addEventListener('change', (e) => {
   ) {
     const i = Number(el.dataset.opponent)
     selected[i] = el.value
+    writeStorage(LINEUP_STORE, JSON.stringify(selected))
     render()
     document.querySelector<HTMLSelectElement>('#op-' + i)?.focus()
   }
@@ -1417,4 +1511,5 @@ document.addEventListener('submit', (e) => {
 dialog.addEventListener('cancel', (e) => {
   if (restoring) e.preventDefault()
 })
+scheduleRetryControls()
 void bootstrap()

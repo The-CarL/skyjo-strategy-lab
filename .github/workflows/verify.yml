@@ -14,6 +14,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check && npm test && npm run build
+      - name: Check traffic control infrastructure
+        run: python3 -m unittest discover -s test -p "traffic*_test.py" && python3 test/infra_origin_test.py
       - name: Recompute the released research summary
         run: |
           npm run phase2:verify
@@ -44,3 +46,4 @@ jobs:
           done
           CHROMIUM_PATH="$(command -v google-chrome)" python test/online_smoke.py
           CHROMIUM_PATH="$(command -v google-chrome)" python test/online_features_smoke.py
+          CHROMIUM_PATH="$(command -v google-chrome)" python test/online_guardrails_smoke.py

@@ -184,7 +184,7 @@ def run():
         button(phone, "Recovery key").click()
         phone.get_by_label("Recovery key to restore").fill(key)
         restored = api_response(phone, "GET", "/api/games/current", button(phone, "Restore key").click)
-        assert restored.request.header_value("authorization") == f"Bearer {key}"
+        assert restored.request.header_value("x-skyjo-profile") == key
         assert restored.json()["game"] == held
         stage(phone, "held")
         no_horizontal_scroll(phone)

@@ -10,6 +10,7 @@ import {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const HISTORY_KEY = /^H#\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z#[0-9a-f-]{36}$/
 const LIMIT_BYTES = 8192
+const PAUSE_RECHECK_SECONDS = 5
 const commands = new Set(['open', 'draw', 'take', 'swap', 'flip', 'nextRound'])
 const hash = (...parts) =>
   createHash('sha256').update(JSON.stringify(parts)).digest('hex')
@@ -37,6 +38,13 @@ const stale = () =>
     409,
     'revision_conflict',
     'The game changed. Reload it and choose your move again.',
+  )
+const newGamesPaused = () =>
+  new HttpError(
+    503,
+    'new_games_paused',
+    'New games are temporarily paused. You can still play an existing game or use the coach.',
+    { 'retry-after': String(PAUSE_RECHECK_SECONDS) },
   )
 const unavailable = () =>
   new HttpError(
@@ -72,13 +80,19 @@ function header(event, wanted) {
 }
 function profile(event) {
   const auth = header(event, 'authorization')
-  const token =
-    typeof auth === 'string'
-      ? /^Bearer ([A-Za-z0-9_-]{43})$/i.exec(auth)?.[1]
-      : null
+  const raw = header(event, 'x-skyjo-profile')
+  const bearer =
+    typeof auth === 'string' && /^Bearer /i.test(auth)
+      ? auth.slice(7)
+      : undefined
+  // With a signed origin request, Authorization belongs to AWS. A legacy bearer
+  // can still carry the same profile during the transition.
+  const token = raw ?? bearer
   if (
-    !token ||
-    Buffer.from(token, 'base64url').toString('base64url') !== token
+    typeof token !== 'string' ||
+    !/^[A-Za-z0-9_-]{43}$/.test(token) ||
+    Buffer.from(token, 'base64url').toString('base64url') !== token ||
+    (raw !== undefined && bearer !== undefined && raw !== bearer)
   ) {
     throw new HttpError(
       401,
@@ -218,6 +232,7 @@ export function createApi({
   logError,
 } = {}) {
   const knownEngines = new Set(engineCatalog.map((x) => x.id))
+  let pausedUntil = 0
   // Read and mutation failures that survive the SDK's retries can be retried with the same request ID.
   async function db(method, ...args) {
     try {
@@ -252,6 +267,7 @@ export function createApi({
     }
     const existing = await db('getGame', owner, id)
     if (existing) return replay(existing)
+    if (Date.now() < pausedUntil) throw newGamesPaused()
     const now = clock(),
       state = createMatch([...opponents], seed())
     const game = {
@@ -265,8 +281,14 @@ export function createApi({
     if (await db('create', owner, game))
       return reply(201, { game: gameView(game) })
     const winner = await db('getGame', owner, id)
-    if (!winner) throw unavailable()
-    return replay(winner)
+    if (winner) return replay(winner)
+    if (await db('newGamesPaused')) {
+      // Repeated attempts while paused still check for an accepted request ID.
+      // Only refusals are cached. A new transaction always checks the owner switch.
+      pausedUntil = Date.now() + PAUSE_RECHECK_SECONDS * 1000
+      throw newGamesPaused()
+    }
+    throw unavailable()
   }
   async function changeGame(owner, id, body, operation) {
     const isAbandon = operation === 'abandon'

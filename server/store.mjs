@@ -8,6 +8,7 @@ import {
   TransactWriteCommand,
 } from '@aws-sdk/lib-dynamodb'
 
+const creationControl = { pk: 'CONTROL#SKYJO', sk: 'NEW_GAMES' }
 const historyPrefix = 'H#'
 const gameKey = (id) => 'G#' + id
 const receiptKey = (id, requestId) => 'R#' + id + '#' + requestId
@@ -16,7 +17,7 @@ const historyKey = (summary) =>
 const copy = (x) => (x == null ? null : structuredClone(x))
 
 /** Shared store contract: a write returns false when one of its compare-and-set conditions failed. */
-export function createMemoryStore() {
+export function createMemoryStore({ newGamesPaused = () => false } = {}) {
   const accounts = new Map()
   const existing = (owner) => accounts.get(owner)
   function ensure(owner) {
@@ -30,6 +31,7 @@ export function createMemoryStore() {
     return accounts.get(owner)
   }
   return {
+    newGamesPaused,
     async getGame(owner, id) {
       return copy(existing(owner)?.games.get(id))
     },
@@ -40,6 +42,7 @@ export function createMemoryStore() {
       return existing(owner)?.receipts.get(receiptKey(id, requestId)) ?? null
     },
     async create(owner, game) {
+      if (newGamesPaused()) return false
       const a = ensure(owner)
       if (a.games.has(game.id)) return false
       a.games.set(game.id, copy(game))
@@ -111,11 +114,11 @@ export function createDynamoStore({ tableName, client } = {}) {
       marshallOptions: { removeUndefinedValues: true },
     })
   const key = (owner, sk) => ({ pk: 'P#' + owner, sk })
-  async function get(owner, sk) {
+  async function get(Key) {
     const result = await db.send(
       new GetCommand({
         TableName: tableName,
-        Key: key(owner, sk),
+        Key,
         ConsistentRead: true,
       }),
     )
@@ -157,17 +160,32 @@ export function createDynamoStore({ tableName, client } = {}) {
     ...(g.finishedAt ? { finishedAt: g.finishedAt } : {}),
   })
   return {
+    async newGamesPaused() {
+      const control = await get(creationControl)
+      return control !== null && control.paused !== false
+    },
     async getGame(owner, id) {
-      return (await get(owner, gameKey(id)))?.game ?? null
+      return (await get(key(owner, gameKey(id))))?.game ?? null
     },
     async currentId(owner) {
-      return (await get(owner, 'CURRENT'))?.gameId ?? null
+      return (await get(key(owner, 'CURRENT')))?.gameId ?? null
     },
     async receipt(owner, id, requestId) {
-      return (await get(owner, receiptKey(id, requestId)))?.signature ?? null
+      return (
+        (await get(key(owner, receiptKey(id, requestId))))?.signature ?? null
+      )
     },
     async create(owner, g) {
       return transact([
+        {
+          ConditionCheck: {
+            TableName: tableName,
+            Key: creationControl,
+            ConditionExpression: 'attribute_not_exists(pk) OR #paused = :open',
+            ExpressionAttributeNames: { '#paused': 'paused' },
+            ExpressionAttributeValues: { ':open': false },
+          },
+        },
         put(row(owner, g), newKey),
         put({ ...key(owner, 'CURRENT'), gameId: g.id }),
       ])
