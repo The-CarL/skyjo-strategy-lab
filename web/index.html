@@ -1,13 +1,77 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f4f0e3"><title>Skyjo · Table Coach</title><style>/*STYLE*/</style></head>
-<body><header><div class="brand"><span class="mark" aria-hidden="true">♧</span> Skyjo Strategy Lab</div><button id="print">Strategy card ↗</button></header>
-<main><div class="intro"><h1>Table coach<span>.</span></h1><p>Enter your visible cards and the discard to get a move.</p></div>
-<div class="table"><section class="mat" aria-label="Your board"><div class="mat-head"><h2>Your board</h2><span id="known"></span></div><div id="grid"></div><div class="mat-foot"><span id="points"></span><button id="reset">New round</button></div></section>
-<section class="coach" aria-label="Turn advice"><label for="policy">Strategy</label><select id="policy"></select>
-<div class="piles"><button id="discard"><span>Top discard</span><strong id="discard-value">+</strong></button><button id="drawn"><span>My blind draw</span><strong id="drawn-value">+</strong></button></div>
-<div class="advice" aria-live="polite"><small>Recommended move</small><h2 id="advice"></h2><p id="reason"></p></div>
-<button class="primary" id="apply"></button><button id="undo">Undo last change</button></section></div>
-</main><footer>Skyjo Strategy Lab <span>Independent tabletop companion</span></footer>
-<dialog id="picker"><h2 id="pick-title"></h2><div id="numbers"></div><div id="special"></div><button id="cancel">Cancel</button></dialog>
-<section id="rulecard"><div id="paper-content"><!--PAPER--></div><button id="back">Back to coach</button><button id="paper">Print card</button></section>
-<script>/*SCRIPT*/</script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f0e3">
+    <title>Skyjo · Table Coach</title>
+    <!--COACH_STYLE-->
+  </head>
+  <body>
+    <header>
+      <div class="brand"><span class="mark" aria-hidden="true">♧</span> Skyjo Strategy Lab</div>
+      <nav class="header-actions" aria-label="Coach navigation">
+        <!--ONLINE_NAV-->
+        <button id="print" type="button">Strategy card</button>
+      </nav>
+    </header>
+    <main>
+      <div class="intro">
+        <h1>Table coach<span>.</span></h1>
+        <p id="instructions">Tap the two cards you turned over in front of you and enter their values.</p>
+      </div>
+      <nav class="section-links" aria-label="Jump to a section">
+        <a href="#board-panel">Your board</a>
+        <a href="#turn-panel">Your turn</a>
+      </nav>
+      <div class="table">
+        <section id="board-panel" class="mat" aria-labelledby="board-title" tabindex="-1">
+          <div class="mat-head">
+            <h2 id="board-title">Your board</h2>
+            <span id="known"></span>
+          </div>
+          <div id="grid" role="group" aria-label="Edit your board, four columns of three cards"></div>
+          <div class="mat-foot">
+            <span id="points"></span>
+            <button type="button" id="reset">New round</button>
+          </div>
+        </section>
+        <section id="turn-panel" class="coach" aria-labelledby="turn-title" tabindex="-1">
+          <h2 id="turn-title">Your turn</h2>
+          <div class="piles">
+            <button type="button" id="discard" aria-haspopup="dialog">
+              <span class="pile-label">Top discard</span><strong id="discard-value">+</strong>
+            </button>
+            <button type="button" id="drawn" aria-haspopup="dialog">
+              <span class="pile-label" id="draw-label">Draw a card</span><strong id="drawn-value">+</strong>
+            </button>
+          </div>
+          <div class="advice" aria-live="polite" aria-atomic="true">
+            <small>Recommended move</small><h2 id="advice"></h2><p id="reason"></p>
+          </div>
+          <button type="button" class="primary" id="apply" hidden></button>
+          <p id="feedback" role="status"></p>
+          <button type="button" id="undo">Undo last change</button>
+          <div class="strategy-field">
+            <label for="policy">Strategy</label>
+            <select id="policy"></select>
+          </div>
+        </section>
+      </div>
+    </main>
+    <footer>Skyjo Strategy Lab <span>Independent tabletop companion</span></footer>
+    <dialog id="picker" aria-labelledby="pick-title" aria-describedby="pick-detail">
+      <h2 id="pick-title" tabindex="-1"></h2>
+      <p id="pick-detail"></p>
+      <div id="numbers"></div>
+      <div id="special"></div>
+      <button id="cancel" type="button">Cancel</button>
+    </dialog>
+    <section id="rulecard">
+      <div id="paper-content"><!--PAPER--></div>
+      <button id="back" type="button">Back to coach</button>
+      <button id="paper" type="button">Print card</button>
+    </section>
+    <!--COACH_SCRIPT-->
+  </body>
+</html>

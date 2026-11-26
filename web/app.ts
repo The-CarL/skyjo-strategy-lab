@@ -16,10 +16,18 @@ function add(id: string, label: string, policy: Policy) {
   modes.set(id, { label, policy })
 }
 if (__VALUE_UPGRADE__)
-  add('value', 'Family rule · clear or trade', familyPolicy('family-value-upgrade')!)
+  add(
+    'value',
+    'Family rule · clear or trade',
+    familyPolicy('family-value-upgrade')!,
+  )
 add('family', 'Family rule · clear, then 3', threshold(3, true))
 if (__MATCH_MODEL__)
-  add('match', 'Full-match neural network', learned(matchModel as Bundle, 'mlp'))
+  add(
+    'match',
+    'Full-match neural network',
+    learned(matchModel as Bundle, 'mlp'),
+  )
 add('board', 'Board evaluator', positional('board'))
 add('tree', 'Round-trained decision tree', learned(models as Bundle, 'tree'))
 add('mlp', 'Round-trained neural network', learned(models as Bundle, 'mlp'))
@@ -36,24 +44,46 @@ const fresh = (): State => ({
   mode: __VALUE_UPGRADE__ ? 'value' : 'family',
 })
 const storeKey = 'skyjo-lab-coach-v1'
-const valid = (n: unknown) =>
+const valid = (n: unknown): n is number =>
   typeof n === 'number' && Number.isInteger(n) && n >= -2 && n <= 12
+const maxUndo = 120
+const history: State[] = []
 let s = fresh()
+
+function restored(value: unknown): State | null {
+  if (!value || typeof value !== 'object') return null
+  const { board, discard, held, mode } = value as Partial<State>
+  if (
+    !Array.isArray(board) ||
+    board.length !== 12 ||
+    !board.every((x) => x === null || x === GONE || valid(x)) ||
+    !(discard === null || valid(discard)) ||
+    !(held === null || valid(held))
+  )
+    return null
+  return {
+    board: [...board],
+    discard,
+    held,
+    mode: typeof mode === 'string' && modes.has(mode) ? mode : fresh().mode,
+  }
+}
 try {
   const saved = JSON.parse(localStorage.getItem(storeKey) ?? 'null')
-  if (
-    saved &&
-    modes.has(saved.mode) &&
-    [saved.held, saved.discard].every((x) => x === null || valid(x)) &&
-    Array.isArray(saved.board) &&
-    saved.board.length === 12 &&
-    saved.board.every((x: unknown) => x === null || x === GONE || valid(x))
-  )
-    s = saved
+  const current = restored(saved)
+  if (current) {
+    s = current
+    if (Array.isArray(saved.undo)) {
+      for (const entry of saved.undo.slice(-maxUndo)) {
+        const step = restored(entry)
+        if (step) history.push(step)
+      }
+    }
+  }
 } catch {
-  /* File URLs and private browsing may disable storage. */
+  /* The board remains usable when this browser disables file storage. */
 }
-const history: State[] = []
+
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T
 const button = (id: string) => el<HTMLButtonElement>(id)
@@ -64,27 +94,40 @@ for (const [id, mode] of modes) {
 let current: Action | null = null
 const spot = (slot: number) =>
   'column ' + (Math.floor(slot / 3) + 1) + ', row ' + ((slot % 3) + 1)
-function update(fn: () => void) {
-  history.push(structuredClone(s))
-  if (history.length > 120) history.shift()
-  fn()
+function update(fn: () => string | void) {
+  const before: State = { ...s, board: [...s.board] }
+  const message = fn()
+  const changed =
+    before.discard !== s.discard ||
+    before.held !== s.held ||
+    before.mode !== s.mode ||
+    !before.board.every((x, i) => x === s.board[i])
+  if (changed) {
+    history.push(before)
+    if (history.length > maxUndo) history.shift()
+  }
   render()
+  el('feedback').textContent = message ?? ''
 }
+
+type Entry = number | null | 'gone'
 function pick(
   title: string,
-  done: (x: number | null | 'gone') => void,
+  detail: string,
+  done: (x: Entry) => void,
+  selected?: Entry,
   edit = false,
 ) {
   el('pick-title').textContent = title
+  el('pick-detail').textContent = detail
   el('numbers').replaceChildren()
   el('special').replaceChildren()
-  function choice(
-    label: string,
-    value: number | null | 'gone',
-    target: string,
-  ) {
+  function choice(label: string, value: Entry, target: string, id?: string) {
     const b = document.createElement('button')
+    b.type = 'button'
     b.textContent = label
+    if (id) b.id = id
+    b.setAttribute('aria-pressed', String(value === selected))
     b.onclick = () => {
       dialog.close()
       done(value)
@@ -93,29 +136,43 @@ function pick(
   }
   for (let i = -2; i <= 12; i++) choice(String(i), i, 'numbers')
   if (edit) {
-    choice('Face down', null, 'special')
-    choice('Column gone', 'gone', 'special')
+    choice('Face down', null, 'special', 'mark-hidden')
+    choice('Column gone', 'gone', 'special', 'mark-gone')
   }
   dialog.showModal()
+  el('pick-title').focus({ preventScroll: true })
 }
-function clearBoard() {
-  for (let i = 0; i < 12; i += 3)
-    if (threeMatch(s.board[i], s.board[i + 1], s.board[i + 2]))
+function clearBoard(): number[] {
+  const cleared: number[] = []
+  for (let i = 0; i < 12; i += 3) {
+    if (threeMatch(s.board[i], s.board[i + 1], s.board[i + 2])) {
       s.board.splice(i, 3, GONE, GONE, GONE)
+      cleared.push(i / 3 + 1)
+    }
+  }
+  return cleared
 }
 function setSlot(slot: number) {
+  const previous = s.board[slot]
   pick(
     'Edit ' + spot(slot),
+    previous === GONE
+      ? 'This column was removed. Choose a card value or Face down to restore it.'
+      : 'Choose the value on your table, keep this card face down, or mark the whole column gone.',
     (x) =>
       update(() => {
         const start = slot - (slot % 3)
-        if (x === 'gone') s.board.splice(start, 3, GONE, GONE, GONE)
-        else {
-          if (s.board[slot] === GONE) s.board.splice(start, 3, null, null, null)
-          s.board[slot] = x
-          clearBoard()
+        if (x === 'gone') {
+          s.board.splice(start, 3, GONE, GONE, GONE)
+          return 'Column ' + (start / 3 + 1) + ' marked gone.'
         }
+        if (s.board[slot] === GONE) s.board.splice(start, 3, null, null, null)
+        s.board[slot] = x
+        const cleared = clearBoard()
+        if (cleared.length)
+          return 'Matching column ' + cleared.join(', ') + ' removed.'
       }),
+    previous === GONE ? 'gone' : previous,
     true,
   )
 }
@@ -130,28 +187,54 @@ function getView(): View {
   }
 }
 function draw() {
-  pick('What did you draw?', (x) => {
-    if (typeof x === 'number')
-      update(() => {
-        s.held = x
-      })
-  })
+  pick(
+    'What did you draw?',
+    'Draw from the face-down pile on your table, then tap the number on that card.',
+    (x) => {
+      if (typeof x === 'number')
+        update(() => {
+          s.held = x
+        })
+    },
+    s.held ?? undefined,
+  )
 }
+
 function apply() {
   if (!current) return
   const a = current
   if (a.kind === 'draw') return draw()
-  const finish = (value: number) =>
+  const finish = (value: number) => {
     update(() => {
       s.board[a.slot] = value
       s.held = null
       s.discard = null
-      clearBoard()
+      const cleared = clearBoard()
+      if (cleared.length)
+        return 'Move applied. Column ' + cleared.join(', ') + ' cleared.'
+      return (
+        (a.kind === 'flip' ? 'Revealed ' : 'Placed ') +
+        value +
+        ' in ' +
+        spot(a.slot) +
+        '.'
+      )
     })
+    if (button('apply').hidden) {
+      const next = s.board.some((x) => x === null)
+        ? button('discard')
+        : button('reset')
+      next.focus({ preventScroll: true })
+    }
+  }
   if (a.kind === 'flip')
-    return pick('Card revealed in ' + spot(a.slot), (x) => {
-      if (typeof x === 'number') finish(x)
-    })
+    return pick(
+      'Card revealed in ' + spot(a.slot),
+      'Flip this card on your table, then enter its value.',
+      (x) => {
+        if (typeof x === 'number') finish(x)
+      },
+    )
   finish(incoming(getView()))
 }
 function render() {
@@ -164,45 +247,57 @@ function render() {
     ready && hidden > 0 && (s.discard !== null || s.held !== null)
       ? modes.get(s.mode)!.policy.choose(v, Math.random)
       : null
-  const grid = el('grid')
-  grid.replaceChildren()
-  for (let row = 0; row < 3; row++)
-    for (let col = 0; col < 4; col++) {
-      const i = col * 3 + row,
-        x = b[i],
-        cell = document.createElement('button')
-      const text = x === null ? '?' : x === GONE ? '—' : String(x)
-      cell.className =
-        'slot ' +
-        (x === null
-          ? 'hidden'
-          : x === GONE
-            ? 'gone'
-            : x < 0
-              ? 'neg'
-              : x >= 7
-                ? 'high'
-                : '') +
-        (current && current.kind !== 'draw' && current.slot === i
-          ? ' suggest'
-          : '')
-      cell.textContent = text
-      cell.setAttribute(
-        'aria-label',
-        spot(i) +
-          ', ' +
-          (x === null ? 'face down' : x === GONE ? 'removed' : x),
-      )
-      cell.onclick = () => setSlot(i)
-      grid.append(cell)
-    }
+  el('grid').querySelectorAll<HTMLButtonElement>('.slot').forEach((cell) => {
+    const i = Number(cell.dataset.slot),
+      x = b[i]
+    const suggested = current && current.kind !== 'draw' && current.slot === i
+    const face =
+      x === null
+        ? 'hidden'
+        : x === GONE
+          ? 'gone'
+          : x < 0
+            ? 'neg'
+            : x >= 7
+              ? 'high'
+              : ''
+    cell.textContent = x === null ? '?' : x === GONE ? '—' : String(x)
+    cell.className = 'slot ' + face + (suggested ? ' suggest' : '')
+    cell.setAttribute(
+      'aria-label',
+      spot(i) +
+        ', ' +
+        (x === null ? 'face down' : x === GONE ? 'removed' : x) +
+        (suggested ? ', recommended slot' : ''),
+    )
+  })
+  el('instructions').textContent = !ready
+    ? 'Tap the two cards you turned over in front of you and enter their values.'
+    : 'Tap any card to edit your board. Enter the top discard or the card you drew from the face-down pile.'
   el('known').textContent = hidden + ' hidden'
   el('points').textContent =
     'Visible points · ' + revealed.reduce<number>((a, x) => a + x!, 0)
   el<HTMLSelectElement>('policy').value = s.mode
   el('discard-value').textContent = String(s.discard ?? '+')
   el('drawn-value').textContent = String(s.held ?? '+')
-  button('drawn').disabled = !ready || !hidden
+  const holding = s.held !== null
+  el('draw-label').textContent = holding ? 'Card I drew' : 'Draw a card'
+  button('drawn').setAttribute(
+    'aria-label',
+    holding ? 'Edit drawn card ' + s.held : 'Draw a card and enter its value',
+  )
+  button('discard').setAttribute(
+    'aria-label',
+    s.discard === null
+      ? 'Enter the top discard'
+      : 'Edit top discard ' + s.discard,
+  )
+  button('drawn').setAttribute('aria-pressed', String(holding))
+  button('discard').setAttribute(
+    'aria-pressed',
+    String(!holding && s.discard !== null),
+  )
+  button('drawn').disabled = !hidden
   button('discard').disabled = !hidden
   button('undo').disabled = !history.length
   const a = current,
@@ -212,10 +307,16 @@ function render() {
     label = ''
   if (!hidden) {
     title = 'Round finished'
-    reason = 'Give each other player their final turn, then score the table.'
+    reason =
+      'Score the remaining cards after everyone has taken their final turn.'
   } else if (!ready) {
     title = 'Set your opening cards'
-    reason = 'Tap each face-up card on your board and enter its value.'
+    reason =
+      s.held !== null
+        ? 'Your draw of ' +
+          s.held +
+          ' is recorded. Tap your two visible board cards for advice.'
+        : 'Tap each face-up card on your board and enter its value.'
   } else if (!a) {
     title = 'Enter the top discard'
     reason =
@@ -226,7 +327,7 @@ function render() {
       s.mode === 'family'
         ? 'The discard misses a column clear and the low-card cutoff.'
         : 'This strategy prefers the options available from a blind draw.'
-    label = 'Enter drawn card'
+    label = 'Draw and enter its value'
   } else {
     const target = b[a.slot],
       loc = spot(a.slot),
@@ -254,12 +355,17 @@ function render() {
       let bestClear = -Infinity
       for (let col = 0; col < 12; col += 3) {
         const column = b.slice(col, col + 3)
-        const others = column.filter(card => card !== x)
-        if (others.length === 1) bestClear = Math.max(bestClear, 2 * x + (others[0] ?? 5))
+        const others = column.filter((card) => card !== x)
+        if (others.length === 1)
+          bestClear = Math.max(bestClear, 2 * x + (others[0] ?? 5))
       }
       if (Number.isFinite(bestClear) && trade > bestClear)
-        reason += ' Counting a hidden card as 5, this saves ' + trade +
-          ' points. The best clear saves ' + bestClear + '.'
+        reason +=
+          ' Counting a hidden card as 5, this saves ' +
+          trade +
+          ' points. The best clear saves ' +
+          bestClear +
+          '.'
       else if (s.held !== null && x > 3 && trade >= 4)
         reason += ' This blind draw cuts ' + trade + ' points.'
     }
@@ -271,19 +377,36 @@ function render() {
   act.hidden = !a
   act.textContent = label
   try {
-    localStorage.setItem(storeKey, JSON.stringify(s))
+    localStorage.setItem(storeKey, JSON.stringify({ ...s, undo: history }))
   } catch {
     /* usable without persistence */
   }
 }
+// Keep grid buttons mounted across edits so closing the value picker returns focus to the same card.
+for (let row = 0; row < 3; row++)
+  for (let column = 0; column < 4; column++) {
+    const i = column * 3 + row,
+      cell = document.createElement('button')
+    cell.type = 'button'
+    cell.className = 'slot'
+    cell.dataset.slot = String(i)
+    cell.setAttribute('aria-haspopup', 'dialog')
+    cell.onclick = () => setSlot(i)
+    el('grid').append(cell)
+  }
 button('discard').onclick = () =>
-  pick('Top discard', (x) => {
-    if (typeof x === 'number')
-      update(() => {
-        s.discard = x
-        s.held = null
-      })
-  })
+  pick(
+    'Top discard',
+    'Enter the number showing on top of the face-up discard pile.',
+    (x) => {
+      if (typeof x === 'number')
+        update(() => {
+          s.discard = x
+          s.held = null
+        })
+    },
+    s.discard ?? undefined,
+  )
 button('drawn').onclick = draw
 button('apply').onclick = apply
 button('undo').onclick = () => {
@@ -291,6 +414,7 @@ button('undo').onclick = () => {
   if (old) {
     s = old
     render()
+    el('feedback').textContent = 'Last change undone.'
   }
 }
 button('reset').onclick = () =>
