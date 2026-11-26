@@ -27,7 +27,7 @@ cat "$SKYJO_OPS/$run_id.result.json"
 
 Use `baseline` to read the last hour of one-minute WAF counters. Add `--minutes 1440` to inspect the last day. The starts and moves totals include all viewers. They cannot identify one family's traffic. Newly created metrics may take up to 15 minutes to appear in the metric list. Check `series_discovered` and `reported_minutes` before interpreting zeroes. The rate rules use viewer IP internally while the team's CloudWatch metrics contain aggregate counts. WAF request sampling is disabled.
 
-`count` measures traffic while allowing it through. `arm` enables the edge rate response. `native-block` uses AWS WAF's standard 403 response. Each mode accepts `--starts`, `--moves` and `--api` to tune the limits. Specify all three when changing thresholds, then run `verify` and check that an ordinary player can start or resume a table. Editing a rate rule can reset its rolling estimate. Returning to `count` is the rollback for enforcement. Use a fresh run ID for each stage and serialize changes to the private inventory.
+`count` measures traffic while allowing it through. In `arm`, WAF marks over-limit requests. A viewer-request CloudFront Function returns HTTP 429 with `Retry-After: 300` before they reach Lambda. Only the two API behaviors use the function. `native-block` uses AWS WAF's standard 403 response. Each mode accepts `--starts`, `--moves` and `--api` to tune the limits. Specify all three when changing thresholds, then run `verify` and check that an ordinary player can start or resume a table. Editing a rate rule can reset its rolling estimate. Returning to `count` is the rollback for enforcement. Use a fresh run ID for each stage and serialize changes to the private inventory.
 
 ## Pause or resume new games
 
