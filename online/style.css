@@ -82,6 +82,7 @@ a {
 .site-head,
 main,
 footer,
+#legacy-address,
 #notice {
   width: min(1220px, 100%);
   margin-inline: auto;
@@ -865,6 +866,26 @@ details summary {
 #notice {
   padding-top: 12px;
 }
+#legacy-address {
+  padding-top: 12px;
+}
+.migration-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+.migration-actions a,
+#legacy-address .migration-actions button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .notice-box {
   border: 1px solid #ceae81;
   border-radius: 7px;
@@ -1057,6 +1078,7 @@ dialog input {
   .site-head,
   main,
   footer,
+  #legacy-address,
   #notice {
     padding-inline: 15px;
   }

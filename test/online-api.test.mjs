@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { randomBytes, randomUUID } from 'node:crypto'
 import { createApi } from '../server/api.mjs'
+import { createHandler } from '../server/index.mjs'
 import { createDynamoStore, createMemoryStore } from '../server/store.mjs'
 
 const newKey = () => randomBytes(32).toString('base64url')
@@ -149,6 +150,167 @@ test('private profiles, validation and hidden-information boundary', async () =>
     405,
   )
 })
+test('the custom profile header works with a signed origin request and preserves legacy profile isolation', async () => {
+  const api = fixture()
+  const game = (await api.create()).json.game
+  const current = (headers) =>
+    api.request('GET', '/api/games/current', undefined, null, { headers })
+  const signed = 'AWS4-HMAC-SHA256 Credential=example'
+  for (const headers of [
+    { 'X-Skyjo-Profile': api.owner },
+    { 'X-Skyjo-Profile': api.owner, authorization: signed },
+    { 'x-skyjo-profile': api.owner, authorization: 'Bearer ' + api.owner },
+  ]) {
+    const response = await current(headers)
+    assert.equal(response.status, 200)
+    assert.equal(response.json.game.id, game.id)
+    assert.equal(response.headers['cache-control'], 'no-store')
+    assert.ok(!JSON.stringify(response).includes(api.owner))
+  }
+  for (const headers of [
+    { authorization: signed },
+    { 'x-skyjo-profile': api.owner, authorization: 'Bearer ' + newKey() },
+    { 'x-skyjo-profile': 'bad', authorization: 'Bearer ' + api.owner },
+    { 'x-skyjo-profile': api.owner + ',' + api.owner },
+  ]) {
+    const response = await current(headers)
+    assert.equal(response.status, 401)
+    assert.equal(response.json.error.code, 'invalid_profile')
+    assert.ok(!JSON.stringify(response).includes(api.owner))
+  }
+  assert.deepEqual((await current({ 'x-skyjo-profile': newKey() })).json, {
+    game: null,
+  })
+})
+
+test('the owner can pause new games across profiles while existing games and idempotent retries continue', async (t) => {
+  t.mock.timers.enable({
+    apis: ['Date'],
+    now: new Date('2026-01-01T00:00:00Z'),
+  })
+  let paused = false
+  let transactions = 0
+  let gateReads = 0
+  const mem = createMemoryStore({ newGamesPaused: () => paused })
+  const api = fixture({
+    store: {
+      ...mem,
+      create(...args) {
+        transactions++
+        return mem.create(...args)
+      },
+      newGamesPaused() {
+        gateReads++
+        return mem.newGamesPaused()
+      },
+    },
+  })
+  const rid = randomUUID()
+  const existing = (await api.create(rid)).json.game
+  const other = (await api.create()).json.game
+  paused = true
+  const rejected = randomUUID()
+  const first = await api.create(rejected)
+  assert.equal(first.status, 503)
+  assert.equal(first.json.error.code, 'new_games_paused')
+  assert.equal(first.headers['retry-after'], '5')
+  assert.equal(first.headers['cache-control'], 'no-store')
+  const afterDenial = transactions
+  assert.equal(
+    (await api.create(randomUUID(), engines, newKey())).json.error.code,
+    'new_games_paused',
+  )
+  assert.equal(transactions, afterDenial)
+  assert.equal((await api.create(rid)).json.game.id, existing.id)
+  assert.equal(
+    (await api.create(rid, ['board'])).json.error.code,
+    'idempotency_conflict',
+  )
+  assert.equal(
+    (await api.request('GET', '/api/games/current')).json.game.id,
+    other.id,
+  )
+  assert.equal((await api.abandon(other)).status, 200)
+  const finished = await finish(api, existing)
+  assert.equal(
+    (await api.request('GET', '/api/history')).json.items[0].id,
+    finished.game.id,
+  )
+  assert.equal((await api.create(rid)).json.game.phase, 'gameOver')
+  assert.equal(gateReads, 1)
+  paused = false
+  t.mock.timers.tick(5000)
+  assert.equal((await api.create(rejected)).status, 201)
+  assert.equal((await api.create(rejected)).status, 200)
+})
+
+test('an accepted create replay wins a race with a subsequent pause', async () => {
+  const mem = createMemoryStore({ newGamesPaused: () => false })
+  const api = fixture({
+    store: {
+      ...mem,
+      async create(...args) {
+        assert.equal(await mem.create(...args), true)
+        return false
+      },
+      newGamesPaused() {
+        throw Error('An accepted create must replay directly')
+      },
+    },
+  })
+  const result = await api.create()
+  assert.equal(result.status, 200)
+  assert.equal(result.json.game.phase, 'opening')
+})
+
+test('only the allowlisted public assets are shared-cacheable, with validators across GET and HEAD', async () => {
+  const reads = []
+  const handler = createHandler(null, (name) => {
+    reads.push(name)
+    return 'asset-' + name
+  })
+  const request = (rawPath, method = 'GET', headers = {}) =>
+    handler({
+      rawPath,
+      requestContext: { http: { method } },
+      headers,
+    })
+  for (const [path, seconds] of [
+    ['/', 60],
+    ['/index.html', 60],
+    ['/coach', 60],
+    ['/coach/', 60],
+    ['/app.js', 300],
+    ['/style.css', 300],
+    ['/coach/app.js', 300],
+    ['/coach/style.css', 300],
+  ]) {
+    const original = await request(path)
+    assert.equal(original.statusCode, 200)
+    assert.equal(
+      original.headers['cache-control'],
+      'public, max-age=0, s-maxage=' + seconds + ', must-revalidate',
+    )
+    assert.ok(original.body.length)
+    const cached = await request(path, 'GET', {
+      'if-none-match': '"different", W/' + original.headers.etag,
+    })
+    assert.equal(cached.statusCode, 304)
+    assert.equal(cached.body, '')
+    assert.equal((await request(path, 'HEAD')).body, '')
+  }
+  assert.ok(reads.length < 8)
+  for (const path of [
+    '/missing.css',
+    '/api/engines',
+    '/api/history',
+    '/api/games/current',
+  ]) {
+    const result = await request(path)
+    assert.equal(result.headers['cache-control'], 'no-store')
+  }
+})
+
 test('creation retries preserve game identity without displacing the most recently started game', async () => {
   const api = fixture(),
     rid = randomUUID()
@@ -452,7 +614,15 @@ test('Dynamo write contract uses one guarded transaction for final state, receip
   }
   const summary = { id, finishedAt: game.finishedAt }
   assert.equal(await db.create(owner, game), true)
-  assert.equal(calls[0].TransactItems.length, 2)
+  assert.equal(calls[0].TransactItems.length, 3)
+  const gate = calls[0].TransactItems[0].ConditionCheck
+  assert.deepEqual(gate.Key, { pk: 'CONTROL#SKYJO', sk: 'NEW_GAMES' })
+  assert.equal(gate.TableName, 'sky-test')
+  assert.equal(
+    gate.ConditionExpression,
+    'attribute_not_exists(pk) OR #paused = :open',
+  )
+  assert.deepEqual(gate.ExpressionAttributeValues, { ':open': false })
   const r = await db.commit(
     owner,
     game,
@@ -479,6 +649,9 @@ test('Dynamo write contract uses one guarded transaction for final state, receip
       (i) => i.Put.Item.pk === 'P#' + owner && i.Put.TableName === 'sky-test',
     ),
   )
+  assert.equal(await db.newGamesPaused(), false)
+  assert.deepEqual(calls.at(-1).Key, gate.Key)
+  assert.equal(calls.at(-1).ConsistentRead, true)
   await db.currentId(owner)
   assert.equal(calls.at(-1).ConsistentRead, true)
   await db.history(owner, 10)

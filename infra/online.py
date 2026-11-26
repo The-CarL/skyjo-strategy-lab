@@ -4,6 +4,7 @@ import argparse
 import base64
 from datetime import datetime, timezone
 import gzip
+import fcntl
 import hashlib
 import json
 import os
@@ -70,6 +71,12 @@ class Deployment:
         self.path = args.inventory.resolve()
         require(not self.path.is_relative_to(ROOT), "Inventory belongs outside the checkout")
         self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        # A release and an edge update share this snapshot and its append-only journal.
+        self._inventory_lock = self.path.with_suffix(".lock").open("a")
+        try:
+            fcntl.flock(self._inventory_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise RuntimeError("Another operation is using this inventory; retry after it completes")
         self.project = PROJECT["project_id"]
         self.env = PROJECT["environment"]
         self.scope = self.project + "-" + self.env
@@ -184,12 +191,21 @@ class Deployment:
             {"Effect": "Allow", "Action": ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Query"],
              "Resource": self.table_arn},
         ]}
-        if not self.has("role_policy"):
-            self.mutate("iam", "put-role-policy", {"RoleName": self.name, "PolicyName": POLICY,
-                                                   "PolicyDocument": json.dumps(policy)})
+        legacy = json.loads(json.dumps(policy))
+        policy["Statement"][1]["Condition"] = {
+            "ForAllValues:StringLike": {"dynamodb:LeadingKeys": "P#*"},
+            "Null": {"dynamodb:LeadingKeys": "false"}}
+        policy["Statement"].append({"Effect": "Allow", "Action": ["dynamodb:GetItem", "dynamodb:ConditionCheckItem"],
+            "Resource": self.table_arn, "Condition": {
+                "ForAllValues:StringEquals": {"dynamodb:LeadingKeys": "CONTROL#SKYJO"},
+                "Null": {"dynamodb:LeadingKeys": "false"}}})
+        query = {"RoleName": self.name, "PolicyName": POLICY}
+        current = aws("iam", "get-role-policy", query)["PolicyDocument"] if self.has("role_policy") else None
+        require(current is None or current in (legacy, policy), "Unexpected inline workload permissions")
+        if current != policy:
+            self.mutate("iam", "put-role-policy", {**query, "PolicyDocument": json.dumps(policy)})
             self.remember("role_policy", POLICY, "AWS::IAM::Policy", "role")
-        result = aws("iam", "get-role-policy", {"RoleName": self.name, "PolicyName": POLICY})
-        require(result["PolicyDocument"] == policy, "Unexpected inline workload permissions")
+        require(aws("iam", "get-role-policy", query)["PolicyDocument"] == policy, "Workload policy readback failed")
 
     def table_and_logs(self):
         if not self.has("table"):
@@ -246,8 +262,12 @@ class Deployment:
                 "Code": {"ZipFile": code}, "Architectures": ["arm64"], "Tags": self.tags})
             self.remember("function", self.lambda_arn, "AWS::Lambda::Function", "role")
         config = self.wait_function()
-        require(all(config.get(k) == v for k, v in settings.items()) and config["Architectures"] == ["arm64"],
+        require(all(config.get(k) == v for k, v in settings.items() if k != "Environment")
+                and config["Architectures"] == ["arm64"]
+                and config["Environment"]["Variables"].get("SKYJO_TABLE") == self.table,
                 "Lambda configuration differs from the approved settings")
+        from origin_rate import validate_release
+        validate_release(self, config, package)
         if config["CodeSha256"] != digest:
             self.mutate("lambda", "update-function-code", {"FunctionName": self.name, "ZipFile": code,
                                                             "RevisionId": config["RevisionId"]})
@@ -263,10 +283,11 @@ class Deployment:
         self.save()
         return asset_hashes
 
-    def probe(self, path):
-        # The history read also exercises the bounded Lambda execution role against DynamoDB.
+    def probe(self, path, viewer=None):
+        # Direct operator invocations bypass CloudFront. TEST-NET is only a synthetic release identity.
+        viewer = viewer or "192.0.2." + str(secrets.randbelow(254) + 1)
         event = {"version": "2.0", "rawPath": path, "requestContext": {"http": {"method": "GET"}},
-                 "headers": {"authorization": "Bearer " + secrets.token_urlsafe(32)}}
+                 "headers": {"x-skyjo-profile": secrets.token_urlsafe(32), "x-skyjo-viewer-ip": viewer}}
         with tempfile.TemporaryDirectory(dir=self.path.parent) as tmp:
             output = Path(tmp) / "result"
             invocation = Path(tmp) / "event.json"
@@ -282,26 +303,15 @@ class Deployment:
             return actual
 
     def publish(self):
-        for sid, (action, key, value) in URL_RULES.items():
-            if not self.has(sid):
-                self.mutate("lambda", "add-permission", {"FunctionName": self.name, "StatementId": sid,
-                                                        "Action": action, "Principal": "*", key: value})
-                self.remember(sid, sid, "AWS::Lambda::Permission", "function")
-        doc = json.loads(aws("lambda", "get-policy", {"FunctionName": self.name})["Policy"])
-        require(len(doc["Statement"]) == 2, "Unexpected additional Lambda resource permissions")
-        for s in doc["Statement"]:
-            action, key, value = URL_RULES[s["Sid"]]
-            actual = {"StringEquals": {"lambda:FunctionUrlAuthType": "NONE"}} if key == "FunctionUrlAuthType" else {
-                "Bool": {"lambda:InvokedViaFunctionUrl": "true"}}
-            require(s["Action"] == action and s["Principal"] == "*" and s["Effect"] == "Allow" and
-                    s["Resource"] == self.lambda_arn and s["Condition"] == actual, "Unexpected Lambda URL grant")
+        from origin import invalidate_static, verify_url_permissions
         if not self.has("url"):
-            result = self.mutate("lambda", "create-function-url-config", {"FunctionName": self.name, "AuthType": "NONE"})
+            result = self.mutate("lambda", "create-function-url-config", {"FunctionName": self.name, "AuthType": "AWS_IAM"})
             self.remember("url", result["FunctionUrl"], "AWS::Lambda::Url", "function")
         result = aws("lambda", "get-function-url-config", {"FunctionName": self.name})
         url = self.state["resources"]["url"]["id"]
-        require(result["FunctionUrl"] == url and result["AuthType"] == "NONE" and not result.get("Cors"),
-                "Unexpected endpoint configuration")
+        require(result["FunctionUrl"] == url and not result.get("Cors"), "Unexpected endpoint configuration")
+        verify_url_permissions(self, result["AuthType"])
+        invalidate_static(self)
         require(aws("lambda", "get-function-concurrency", {"FunctionName": self.name})
                 .get("ReservedConcurrentExecutions") == CONCURRENCY, "Concurrency readback failed")
         self.state["last_readback"] = {"run": self.run, "source": self.commit, "time": timestamp(),

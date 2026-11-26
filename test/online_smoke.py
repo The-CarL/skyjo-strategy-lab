@@ -1,5 +1,6 @@
 """Exercise the hosted game against a running local server using fresh browser profiles."""
 import os
+from hashlib import sha256
 from urllib.parse import urlsplit
 
 from playwright.sync_api import expect, sync_playwright
@@ -117,8 +118,10 @@ def run():
         button(phone, "Remove opponent 2").click()
         phone.get_by_label("Opponent 1", exact=True).select_option(ENGINE)
         response = api_response(phone, "POST", "/api/games", button(phone, "Start game").click)
-        authorization = response.request.header_value("authorization")
-        assert authorization and authorization.startswith("Bearer ")
+        profile_key = response.request.header_value("x-skyjo-profile")
+        assert profile_key and len(profile_key) == 43
+        assert response.request.header_value("authorization") is None
+        assert response.request.header_value("x-amz-content-sha256") == sha256(response.request.post_data_buffer).hexdigest()
         game = response.json()["game"]
         assert [p["engineId"] for p in game["players"]] == [None, ENGINE]
         assert game["players"][0]["board"] == [None] * 12
@@ -142,14 +145,14 @@ def run():
         # A second browser profile starts with an independent guest key and no saved games.
         fresh = api_response(other, "GET", "/api/games/current", lambda: other.goto(BASE))
         assert fresh.json()["game"] is None
-        fresh_auth = fresh.request.header_value("authorization")
-        assert fresh_auth and fresh_auth != authorization
+        other_profile = fresh.request.header_value("x-skyjo-profile")
+        assert other_profile and other_profile != profile_key
         private_status = other.evaluate(
-            """async ({id, auth}) => {
-                const response = await fetch('/api/games/' + id, {headers: {Authorization: auth}})
+            """async ({id, profile}) => {
+                const response = await fetch('/api/games/' + id, {headers: {"X-Skyjo-Profile": profile}})
                 return response.status
             }""",
-            {"id": game["id"], "auth": fresh_auth},
+            {"id": game["id"], "profile": other_profile},
         )
         assert private_status == 404
         empty = api_response(other, "GET", "/api/history", button(other, "Match history").click)
@@ -157,7 +160,7 @@ def run():
         button(other, "Recovery key").click()
         other.get_by_label("Recovery key to restore").fill(key)
         restored = api_response(other, "GET", "/api/games/current", button(other, "Restore key").click)
-        assert restored.request.header_value("authorization") == authorization
+        assert restored.request.header_value("x-skyjo-profile") == profile_key
         recovered = restored.json()["game"]
         assert (recovered["id"], recovered["revision"]) == (after["id"], after["revision"])
         button(other, "Table").click()

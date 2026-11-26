@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Manage the Skyjo HTTPS hostname with the selected factory AWS role and private release inventory."""
 import argparse
+from copy import deepcopy
 import hashlib
 import json
 import os
@@ -17,8 +18,36 @@ ZONE = "carloperottino.com"
 APPROVAL = "Publish skyjo.carloperottino.com over HTTPS for the Skyjo game and family coach"
 CLOUDFRONT_ZONE = "Z2FDTNDATAQYW2"
 CACHE_POLICY = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"  # AWS Managed-CachingDisabled
+MANAGED_STATIC = "658327ea-f89d-4fab-a63d-7e88639e58f6"  # AWS Managed-CachingOptimized
 ORIGIN_POLICY = "b689b0a8-53d0-40ab-baf2-68738e2966ac"  # AWS Managed-AllViewerExceptHostHeader
 METHODS = ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"]
+
+def signed_config(config, resources):
+    """Patch only this app's origin and routing. Preserve the live WAF, plan and response settings."""
+    origin = config["Origins"]["Items"][0]
+    origin["OriginAccessControlId"] = resources["origin_access"]["id"]
+    default = config["DefaultCacheBehavior"]
+    prior = {item["PathPattern"]: item for item in config.get("CacheBehaviors", {}).get("Items", [])}
+    require(set(prior) <= {"api", "api/*"}, "Unexpected existing cache behaviors; preserve them before updating")
+    behaviors = []
+    for path in ("api", "api/*"):
+        if path in prior:
+            dynamic = deepcopy(prior[path])
+        else:
+            # A viewer function on a public asset must never be implicitly applied to authenticated traffic.
+            dynamic = {k: deepcopy(v) for k, v in default.items()
+                       if k not in ("FunctionAssociations", "LambdaFunctionAssociations")}
+        dynamic.update(PathPattern=path, TargetOriginId=default["TargetOriginId"], CachePolicyId=CACHE_POLICY,
+            OriginRequestPolicyId=ORIGIN_POLICY, AllowedMethods={"Quantity": 7, "Items": METHODS,
+                "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]}})
+        behaviors.append(dynamic)
+    config["CacheBehaviors"] = {"Quantity": len(behaviors), "Items": behaviors}
+    static_policy = resources.get("distribution", {}).get("details", {}).get("managed_static")
+    default["CachePolicyId"] = MANAGED_STATIC if static_policy else resources["static_cache_policy"]["id"]
+    default.pop("OriginRequestPolicyId", None)
+    default["AllowedMethods"] = {"Quantity": 2, "Items": ["GET", "HEAD"], "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]}}
+    return config
+
 
 
 def token(text):
@@ -130,7 +159,7 @@ class Domain:
         origin = urlsplit(fn_url).hostname
         require(origin and re.fullmatch(r"[a-z0-9]+\.lambda-url\.us-east-1\.on\.aws", origin), "Unexpected origin host")
         origin_id = "skyjo-function"
-        return {
+        config = {
             "CallerReference": self.d.scope + "-skyjo-https-v1", "Aliases": {"Quantity": 1, "Items": [HOST]},
             "Origins": {"Quantity": 1, "Items": [{"Id": origin_id, "DomainName": origin, "CustomOriginConfig": {
                 "HTTPPort": 80, "HTTPSPort": 443, "OriginProtocolPolicy": "https-only",
@@ -145,6 +174,10 @@ class Domain:
             "HttpVersion": "http2", "IsIPV6Enabled": True, "ViewerCertificate": {
                 "ACMCertificateArn": arn, "SSLSupportMethod": "sni-only", "MinimumProtocolVersion": "TLSv1.2_2021"},
         }
+
+        if self.resources.get("distribution", {}).get("details", {}).get("signed_origin"):
+            return signed_config(config, self.resources)
+        return config
 
     def distribution(self):
         config = self.config()
@@ -170,17 +203,24 @@ class Domain:
         self.d.verify("distribution", aws("cloudfront", "list-tags-for-resource",
                                          {"Resource": dist["ARN"]})["Tags"]["Items"])
         actual = dist["DistributionConfig"]
-        before, after = config["DefaultCacheBehavior"], actual["DefaultCacheBehavior"]
         require(actual["Enabled"] and actual["IsIPV6Enabled"] and actual["Aliases"] == config["Aliases"]
-                and actual["CacheBehaviors"]["Quantity"] == 0 and actual["Origins"]["Quantity"] == 1
+                and actual["Origins"]["Quantity"] == 1
                 and actual["PriceClass"] == config["PriceClass"], "Unexpected distribution scope")
         origin = actual["Origins"]["Items"][0]
         require(origin["DomainName"] == config["Origins"]["Items"][0]["DomainName"] and
                 origin["CustomOriginConfig"]["OriginProtocolPolicy"] == "https-only" and
                 origin["CustomOriginConfig"]["OriginSslProtocols"]["Items"] == ["TLSv1.2"], "Origin TLS mismatch")
-        require(all(before[k] == after[k] for k in ("TargetOriginId", "ViewerProtocolPolicy", "CachePolicyId",
-                "OriginRequestPolicyId")) and set(after["AllowedMethods"]["Items"]) == set(METHODS),
-                "Unexpected proxy behavior")
+        want_orig = config["Origins"]["Items"][0]
+        require(origin.get("OriginAccessControlId", "") == want_orig.get("OriginAccessControlId", ""),
+                "Unexpected CloudFront origin access control")
+        expected = config.get("CacheBehaviors", {}).get("Items", [])
+        received = actual["CacheBehaviors"].get("Items", [])
+        require([b["PathPattern"] for b in received] == [b["PathPattern"] for b in expected], "Unexpected edge paths")
+        for before, after in zip([config["DefaultCacheBehavior"], *expected], [actual["DefaultCacheBehavior"], *received]):
+            require(all(before.get(k) == after.get(k) for k in ("TargetOriginId", "ViewerProtocolPolicy",
+                    "CachePolicyId", "OriginRequestPolicyId"))
+                    and set(after["AllowedMethods"]["Items"]) == set(before["AllowedMethods"]["Items"]),
+                    "Unexpected proxy behavior")
         require({r["ErrorCode"]: r["ErrorCachingMinTTL"] for r in actual["CustomErrorResponses"]["Items"]} ==
                 {r["ErrorCode"]: 0 for r in config["CustomErrorResponses"]["Items"]}, "Error cache policy mismatch")
         require(all(actual["ViewerCertificate"].get(k) == v for k,v in config["ViewerCertificate"].items()),

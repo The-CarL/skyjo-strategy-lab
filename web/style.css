@@ -94,6 +94,24 @@ header {
 .intro {
   margin: 36px 0 23px;
 }
+#legacy-coach-address {
+  margin-top: 12px;
+  padding: 12px 14px 4px;
+  border: 1px solid #ceae81;
+  border-radius: 8px;
+  background: #fff0d6;
+  color: #603a26;
+  font-size: 14px;
+  line-height: 1.45;
+}
+#legacy-coach-address a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
 h1,
 h2,
 p {

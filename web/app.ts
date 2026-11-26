@@ -86,6 +86,10 @@ const el = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T
 const button = (id: string) => el<HTMLButtonElement>(id)
 const dialog = el<HTMLDialogElement>('picker')
+const legacyOrigin = 'https://lin3byzlstcyscggn7lkbujkb40iqzec.lambda-url.us-east-1.on.aws'
+const legacyNotice = document.getElementById('legacy-coach-address')
+if (legacyNotice && location.origin === legacyOrigin && document.getElementById('online-nav'))
+  legacyNotice.hidden = false
 for (const [id, mode] of modes) {
   el<HTMLSelectElement>('policy').add(new Option(mode.label, id))
   const title = document.createElement('dt')
