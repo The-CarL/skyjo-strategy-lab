@@ -282,7 +282,8 @@ class Traffic:
             counts = {str(p["Timestamp"])[:16]: int(p["Sum"]) for p in points}
             series = [counts.get((begin + timedelta(minutes=i)).isoformat()[:16], 0) for i in range(minutes)]
             result[metric] = {"sum": sum(series), "series_discovered": bool(series_matches), "reported_minutes": len(points),
-                              "peak_5min_all_viewers": max(sum(series[max(0, i-4):i+1]) for i in range(minutes))}
+                              "peak_5min_all_viewers": max(sum(series[max(0, i-4):i+1]) for i in range(minutes)),
+                              "upper_bound_unaligned_5min": max(sum(series[max(0, i-5):i+1]) for i in range(minutes))}
         print(json.dumps({"start": begin.isoformat(), "end": end.isoformat(), "metrics": result}))
 
     def rollback(self):
