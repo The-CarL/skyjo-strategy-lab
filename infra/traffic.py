@@ -87,6 +87,16 @@ def subscriptions():
         payload = {"nextToken": page["nextToken"]}
 
 
+
+def bucket_counts(points, begin, minutes):
+    counts = {datetime.fromisoformat(p["Timestamp"]).astimezone(timezone.utc): int(p["Sum"]) for p in points}
+    series = [counts.get(begin + timedelta(minutes=i), 0) for i in range(minutes)]
+    def peak(window):
+        return max(sum(series[max(0, i - window + 1):i + 1]) for i in range(minutes))
+    return {"sum": sum(series), "reported_minutes": len(points), "peak_5min_all_viewers": peak(5),
+            "upper_bound_unaligned_5min": peak(6)}
+
+
 class Traffic:
     def __init__(self, d):
         self.d = d
@@ -309,11 +319,7 @@ class Traffic:
                 query = {**series_matches[0], "StartTime": begin.isoformat(), "EndTime": end.isoformat(),
                          "Period": 60, "Statistics": ["Sum"]}
                 points = aws("cloudwatch", "get-metric-statistics", query)["Datapoints"]
-            counts = {datetime.fromisoformat(p["Timestamp"]).astimezone(timezone.utc): int(p["Sum"]) for p in points}
-            series = [counts.get(begin + timedelta(minutes=i), 0) for i in range(minutes)]
-            result[metric] = {"sum": sum(series), "series_discovered": bool(series_matches), "reported_minutes": len(points),
-                              "peak_5min_all_viewers": max(sum(series[max(0, i-4):i+1]) for i in range(minutes)),
-                              "upper_bound_unaligned_5min": max(sum(series[max(0, i-5):i+1]) for i in range(minutes))}
+            result[metric] = {**bucket_counts(points, begin, minutes), "series_discovered": bool(series_matches)}
         print(json.dumps({"start": begin.isoformat(), "end": end.isoformat(), "metrics": result}))
 
     def rollback(self):

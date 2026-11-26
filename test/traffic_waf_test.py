@@ -1,11 +1,12 @@
 """Exercise Skyjo's actual WAF expressions without sending traffic to a live game."""
 import base64
+from datetime import datetime, timezone
 from pathlib import Path
 import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "infra"))
-from traffic import DEFAULT_LIMITS, rules
+from traffic import DEFAULT_LIMITS, bucket_counts, rules
 
 
 def matches(statement, method, path):
@@ -35,6 +36,13 @@ class WafTest(unittest.TestCase):
             hit = [r["Name"] for r in configured if matches(r["Statement"], method, path)]
             self.assertEqual(hit, ([] if not group else
                 [f"Skyjo{group}Total", f"Skyjo{group}PerIP", "SkyjoApiPerIP"] if group != "Api" else ["SkyjoApiPerIP"]))
+
+    def test_utc_buckets_capture_a_household_session_across_local_offsets(self):
+        start = datetime(2026, 11, 26, 17, 18, tzinfo=timezone.utc)
+        points = [{"Timestamp": f"2026-11-26T12:{minute}:00-05:00", "Sum": 3}
+                  for minute in range(18, 24)]
+        self.assertEqual(bucket_counts(points, start, 6), {"reported_minutes": 6, "sum": 18,
+                         "peak_5min_all_viewers": 15, "upper_bound_unaligned_5min": 18})
 
     def test_modes(self):
         for mode in ("count", "arm", "native-block"):
