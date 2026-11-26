@@ -60,7 +60,7 @@ def association(op):
 
 
 def test_published_function(op, path):
-    name = op.name + "-response"
+    name = op.response_name
     live = aws("cloudfront", "describe-function", {"Name": name, "Stage": "LIVE"})
     arn = live["FunctionSummary"]["FunctionMetadata"]["FunctionARN"]
     require(arn == op.resources["traffic_response"]["id"] and

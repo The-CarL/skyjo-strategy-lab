@@ -18,6 +18,7 @@ class FakeTraffic:
     def __init__(self):
         self.resources = {"traffic_acl": {"id": "test-acl", "details": {"limits": dict(DEFAULT_LIMITS)}}}
         self.name = "test-name"
+        self.response_name = "test-response"
         self.dist = "test-distribution"
         self.current_rules = rules(DEFAULT_LIMITS, "count")
         self.linked = False
