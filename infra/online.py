@@ -3,6 +3,7 @@
 import argparse
 import base64
 from datetime import datetime, timezone
+import gzip
 import hashlib
 import json
 import os
@@ -299,7 +300,105 @@ class Deployment:
                                       "private_checks": ["assets", "engines", "history"], "capacity": CAP,
                                       "concurrency": CONCURRENCY}
         self.save()
+        Recovery(self).backup()
         print(json.dumps({"url": url, "source": self.commit, "package_sha256": self.state["zip_sha256"]}))
+
+
+RECOVERY_KEY = {"pk": {"S": "OPS#FACTORY"}, "sk": {"S": "DEPLOYMENT#v1"}}
+
+
+class Recovery:
+    """One atomic operator record, separate from every browser's P# partition."""
+
+    def __init__(self, deploy):
+        self.d = deploy
+        self.files = (deploy.path, deploy.path.with_suffix(".events.jsonl"))
+        self.names = ("inventory", "events")
+        tags = aws("dynamodb", "list-tags-of-resource", {"ResourceArn": deploy.table_arn})["Tags"]
+        actual = {t["Key"]: t["Value"] for t in tags}
+        require(all(actual.get(k) == deploy.tags[k] for k in
+                    ("factory:project-id", "factory:environment", "factory:source-repo", "factory:managed-by", "factory:s")),
+                "Recovery table ownership mismatch")
+
+    def read(self):
+        return aws("dynamodb", "get-item", {"TableName": self.d.table, "Key": RECOVERY_KEY,
+                                            "ConsistentRead": True}).get("Item")
+
+    @staticmethod
+    def hash(data):
+        return hashlib.sha256(data).hexdigest()
+
+    def contents(self, item):
+        require(item and all(item.get(k) == v for k, v in RECOVERY_KEY.items()), "No matching recovery copy")
+        blobs = [gzip.decompress(base64.b64decode(item[name]["S"], validate=True)) for name in self.names]
+        for name, data in zip(self.names, blobs):
+            require(self.hash(data) == item[name + "Sha256"]["S"], "Recovery file digest mismatch")
+        require(item["generation"]["S"] == self.generation(blobs), "Recovery generation mismatch")
+        self.validate(blobs)
+        return blobs
+
+    def generation(self, blobs):
+        return self.hash("".join(self.hash(b) for b in blobs).encode())
+
+    def validate(self, blobs):
+        data = json.loads(blobs[0])
+        require(data["project_id"] == self.d.project and data["environment"] == self.d.env
+                and data["region"] == REGION and data["account"] == self.d.account
+                and data["resources"]["table"]["id"] == self.d.table_arn, "Foreign deployment inventory")
+        require("last_readback" in data, "Recovery copy requires a completed release readback")
+        # Archive these two defined deployment records only. The factory operation replies live elsewhere.
+        inventory_fields = {"project_id", "environment", "region", "account", "resources", "cleanup_owner",
+            "expiry", "approval", "estimated_cost", "zip_sha256", "last_readback"}
+        event_fields = {"actor", "run", "source", "time", "state", "op", "error", "request_sha256"}
+        require(set(data) <= inventory_fields, "Unexpected deployment inventory fields")
+        for line in blobs[1].splitlines():
+            entry = json.loads(line)
+            require(set(entry) <= event_fields and {"run", "source", "time", "state"} <= entry.keys(),
+                    "Unexpected operation journal fields")
+        return data
+
+    def backup(self):
+        blobs = [p.read_bytes() for p in self.files]
+        data = self.validate(blobs)
+        prior = self.read()
+        if prior:
+            old = self.contents(prior)
+            require(blobs[1].startswith(old[1]), "The saved journal and local history diverge. Restore and reconcile.")
+            require(data["last_readback"]["time"] >= json.loads(old[0])["last_readback"]["time"],
+                    "The local inventory predates the saved readback")
+        if prior is None or blobs != old:
+            item = {**RECOVERY_KEY, "generation": {"S": self.generation(blobs)}}
+            for name, blob in zip(self.names, blobs):
+                item[name] = {"S": base64.b64encode(gzip.compress(blob, mtime=0)).decode()}
+                item[name + "Sha256"] = {"S": self.hash(blob)}
+            require(sum(len(v["S"]) for v in item.values()) < 390_000,
+                    "Recovery record exceeds the single-item limit. Split the archive before updating it.")
+            if prior is None:
+                condition = {"ConditionExpression": "attribute_not_exists(pk)"}
+            else:
+                condition = {"ConditionExpression": "#gen = :prior",
+                             "ExpressionAttributeNames": {"#gen": "generation"},
+                             "ExpressionAttributeValues": {":prior": prior["generation"]}}
+            aws("dynamodb", "put-item", {"TableName": self.d.table, "Item": item, **condition})
+        require(self.contents(self.read()) == blobs, "Strong recovery readback differs from the local files")
+        return dict(zip(self.names, map(self.hash, blobs)))
+
+    def restore(self):
+        blobs = self.contents(self.read())
+        for path, blob in zip(self.files, blobs):
+            require(not path.exists() or path.read_bytes() == blob,
+                    "Existing private files differ. Restore into a fresh directory and reconcile.")
+        for path, blob in zip(self.files, blobs):
+            if path.exists():
+                continue
+            # Publish complete bytes atomically without replacing a concurrently created file.
+            with tempfile.NamedTemporaryFile(dir=path.parent) as temp:
+                temp.write(blob)
+                temp.flush()
+                os.fsync(temp.fileno())
+                os.link(temp.name, path)
+        require(all(path.read_bytes() == blob for path, blob in zip(self.files, blobs)), "Restore digest mismatch")
+        return dict(zip(self.names, map(self.hash, blobs)))
 
 
 def main():
@@ -307,10 +406,16 @@ def main():
     parser.add_argument("--inventory", type=Path, required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--package", type=Path, default=ROOT / "online-dist/skyjo-online.zip")
+    parser.add_argument("--recovery", choices=("backup", "restore"))
     args = parser.parse_args()
     require(re.fullmatch(r"[A-Za-z0-9_-]{1,64}", args.run_id), "Invalid run ID")
-    require(args.package.is_file(), "Build the Skyjo online package first")
     deploy = Deployment(args)
+    if args.recovery:
+        copies = Recovery(deploy)
+        digests = copies.backup() if args.recovery == "backup" else copies.restore()
+        print(json.dumps({"verified_sha256": digests}))
+        return
+    require(args.package.is_file(), "Build the Skyjo online package first")
     try:
         deploy.role()
         deploy.table_and_logs()
