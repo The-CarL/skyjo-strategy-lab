@@ -21,6 +21,9 @@ class TrafficAlarmTests(unittest.TestCase):
         self.assertEqual(allow["Principal"], {"Service": "cloudwatch.amazonaws.com"})
         self.assertEqual(allow["Resource"], topic)
         self.assertEqual(allow["Condition"], {"StringEquals": {"aws:SourceAccount": account}, "ArnEquals": {"aws:SourceArn": alarm}})
+        self.assertIn("SNS:Publish", deny["Action"])
+        self.assertIn("SNS:Subscribe", deny["Action"])
+        self.assertTrue(all("*" not in name for name in deny["Action"]))
         self.assertEqual((deny["Effect"], deny["Condition"]["Bool"]["aws:SecureTransport"]), ("Deny", "false"))
 
     def test_uncertain_confirmation_is_not_resent(self):

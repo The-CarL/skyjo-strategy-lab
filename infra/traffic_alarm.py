@@ -10,11 +10,17 @@ from online import Deployment, Recovery, REGION, ROOT, aws, require
 
 
 def topic_policy(topic, alarm, account):
-    return {"Version": "2012-10-17", "Statement": [
+    # SNS topic policies accept only the service's explicit topic actions.
+    topic_actions = [
+        "SNS:AddPermission", "SNS:DeleteTopic", "SNS:GetDataProtectionPolicy", "SNS:GetTopicAttributes",
+        "SNS:ListSubscriptionsByTopic", "SNS:ListTagsForResource", "SNS:Publish", "SNS:PutDataProtectionPolicy",
+        "SNS:RemovePermission", "SNS:SetTopicAttributes", "SNS:Subscribe",
+    ]
+    return {"Version": "2012-10-17", "Id": topic + "/TrafficAlarm", "Statement": [
         {"Sid": "CloudWatchAlarm", "Effect": "Allow", "Principal": {"Service": "cloudwatch.amazonaws.com"},
          "Action": "SNS:Publish", "Resource": topic,
          "Condition": {"StringEquals": {"aws:SourceAccount": account}, "ArnEquals": {"aws:SourceArn": alarm}}},
-        {"Sid": "RequireTLS", "Effect": "Deny", "Principal": "*", "Action": "SNS:*", "Resource": topic,
+        {"Sid": "RequireTLS", "Effect": "Deny", "Principal": {"AWS": "*"}, "Action": topic_actions, "Resource": topic,
          "Condition": {"Bool": {"aws:SecureTransport": "false"}}},
     ]}
 
