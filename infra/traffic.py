@@ -68,6 +68,14 @@ def rules(limits, mode="count"):
     return result
 
 
+def native_diagnostic_rule():
+    """A plain IP Count rule supported in all plans, used only to diagnose an enrollment refusal."""
+    name = "SkyjoNativeDiagnostic"
+    return [{"Name": name, "Priority": 0, "Statement": {"RateBasedStatement": {
+        "AggregateKeyType": "IP", "EvaluationWindowSec": WINDOW, "Limit": DEFAULT_LIMITS["Api"]}},
+        "Action": {"Count": {}}, "VisibilityConfig": visibility(name)}]
+
+
 def subscriptions():
     found = []
     payload = {}
@@ -157,13 +165,15 @@ class Traffic:
         print(json.dumps({"acl": "attached", "mode": "count", "limits": limits}), flush=True)
 
     def enroll(self):
-        acl = self.acl()["WebACL"]["ARN"]
+        current_acl = self.acl()["WebACL"]
+        acl = current_acl["ARN"]
         require(self.current()["DistributionConfig"].get("WebACLId") == acl, "Associate exact ACL first")
         found = self.member()
         if not found:
             arg = {"planFamily": "CloudFront", "planTier": "FREE", "resourceArns": [self.arn, acl],
                    "usageLevel": "DEFAULT", "approvalMode": "IMMEDIATE"}
-            arg["clientToken"] = hashlib.sha256((self.arn + acl + "-free-v1").encode()).hexdigest()
+            suffix = "-free-native-v1" if current_acl["Rules"] == native_diagnostic_rule() else "-free-v1"
+            arg["clientToken"] = hashlib.sha256((self.arn + acl + suffix).encode()).hexdigest()
             found = self.d.mutate("pricing-plan-manager", "create-subscription", arg)["subscription"]
         require(found["planTier"] == "FREE" and set(found["resourceArns"]) == {self.arn, acl}, "Unexpected subscription")
         self.remember("traffic_plan", found["arn"], "AWS::PricingPlanManager::Subscription")
@@ -181,6 +191,15 @@ class Traffic:
         previous = [rule["Name"] for rule in acl["Rules"]]
         generated = rules(limits, mode)
         require(previous == [rule["Name"] for rule in generated], "ACL contains unexpected rules")
+        self.apply_rules(found, generated)
+        if mode != "arm" and self.d.has("traffic_response"):
+            self.set_response_association(self.resources["traffic_response"]["id"], attach=False)
+        self.resources["traffic_acl"]["details"] = {"mode": mode, "limits": limits, "window_seconds": WINDOW}
+        self.d.save()
+        Recovery(self.d).backup()
+
+    def apply_rules(self, found, generated):
+        acl = found["WebACL"]
         if acl["Rules"] != generated:
             writable = ("Name", "Id", "DefaultAction", "Description", "VisibilityConfig", "CustomResponseBodies",
                         "CaptchaConfig", "ChallengeConfig", "TokenDomains", "AssociationConfig",
@@ -189,11 +208,20 @@ class Traffic:
             self.d.mutate("wafv2", "update-web-acl", {**args, "Scope": "CLOUDFRONT", "LockToken": found["LockToken"],
                           "Rules": generated})
         require(self.acl()["WebACL"]["Rules"] == generated, "Mode readback failed")
-        if mode != "arm" and self.d.has("traffic_response"):
-            self.set_response_association(self.resources["traffic_response"]["id"], attach=False)
-        self.resources["traffic_acl"]["details"] = {"mode": mode, "limits": limits, "window_seconds": WINDOW}
+
+    def diagnostic(self, restore, limits):
+        full = rules(limits)
+        minimal = native_diagnostic_rule()
+        found = self.acl()
+        require(found["WebACL"]["Rules"] in (minimal, full), "Live scope differs from these two Count configurations")
+        active = self.member()
+        require(not active or (restore and self.require_free()), "Diagnostic apply only before Free enrollment")
+        self.apply_rules(found, full if restore else minimal)
+        self.resources["traffic_acl"]["details"] = {"mode": "count" if restore else "free-diagnostic",
+                "limits": limits, "window_seconds": WINDOW}
         self.d.save()
         Recovery(self.d).backup()
+        print(json.dumps({"rules": len(full) if restore else len(minimal), "enforcing": False}))
 
     def response_function(self):
         name = self.name + "-response"
@@ -309,7 +337,7 @@ class Traffic:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("stage", choices=["attach", "enroll", "verify", "count", "arm", "native-block", "baseline", "rollback-unenrolled"])
+    parser.add_argument("stage", choices=["attach", "enroll", "verify", "count", "arm", "native-block", "baseline", "diagnose-free", "restore-count", "rollback-unenrolled"])
     parser.add_argument("--inventory", type=Path, required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--starts", type=int)
@@ -329,6 +357,8 @@ def main():
         op.baseline(args.minutes)
     elif args.stage == "verify":
         print(json.dumps(op.status()))
+    elif args.stage in ("diagnose-free", "restore-count"):
+        op.diagnostic(args.stage == "restore-count", limits)
     elif args.stage == "rollback-unenrolled":
         op.rollback()
     else:
