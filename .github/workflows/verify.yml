@@ -14,9 +14,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check && npm test && npm run build
+      - name: Recompute the released research summary
+        run: |
+          npm run phase2:verify
+          git diff --exit-code -- reports/phase2
       - name: Verify recorded and replayed decisions
         run: |
           npm run replay -- --agents threshold-5+open-pair,tree+open-random,board,mlp
+          npm run replay -- --verify work/replay.json
+          npm run replay -- --agents family-value-upgrade,match-mlp-11,matched-round-mlp-11,expanded-table
           npm run replay -- --verify work/replay.json
       - uses: actions/setup-python@v5
         with:

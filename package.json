@@ -10,7 +10,9 @@
     "build": "node scripts/build.mjs",
     "tournament": "node scripts/tournament.mjs",
     "dataset": "node scripts/dataset.mjs",
-    "replay": "node scripts/replay.mjs"
+    "replay": "node scripts/replay.mjs",
+    "phase2:reproduce": "bash scripts/phase2.sh",
+    "phase2:verify": "python3 test/study_v2_stats_test.py && python3 scripts/study_v2_report.py --from-published && node scripts/coach-release.mjs --check"
   },
   "devDependencies": {"typescript": "5.9.3", "esbuild": "0.28.2"}
 }

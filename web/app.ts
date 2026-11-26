@@ -1,28 +1,39 @@
 import { GONE, threeMatch } from '../src/engine.ts'
-import type { Action, Board, View } from '../src/engine.ts'
+import type { Action, Board, Policy, View } from '../src/engine.ts'
 import { incoming, positional, threshold } from '../src/policies.ts'
 import { learned } from '../src/model.ts'
 import type { Bundle } from '../src/model.ts'
 import models from '../models/policies.json' with { type: 'json' }
 
-const policies = {
-  family: threshold(3, true),
-  board: positional('board'),
-  tree: learned(models as Bundle, 'tree'),
-  mlp: learned(models as Bundle, 'mlp'),
+import { familyPolicy } from '../src/family.ts'
+import matchModel from '../models/match-s11.json' with { type: 'json' }
+
+declare const __VALUE_UPGRADE__: boolean
+declare const __MATCH_MODEL__: boolean
+
+const modes = new Map<string, { label: string; policy: Policy }>()
+function add(id: string, label: string, policy: Policy) {
+  modes.set(id, { label, policy })
 }
-type Mode = keyof typeof policies
+if (__VALUE_UPGRADE__)
+  add('value', 'Family rule · clear or trade', familyPolicy('family-value-upgrade')!)
+add('family', 'Family rule · clear, then 3', threshold(3, true))
+if (__MATCH_MODEL__)
+  add('match', 'Full-match neural network', learned(matchModel as Bundle, 'mlp'))
+add('board', 'Board evaluator', positional('board'))
+add('tree', 'Round-trained decision tree', learned(models as Bundle, 'tree'))
+add('mlp', 'Round-trained neural network', learned(models as Bundle, 'mlp'))
 interface State {
   board: Board
   discard: number | null
   held: number | null
-  mode: Mode
+  mode: string
 }
 const fresh = (): State => ({
   board: Array(12).fill(null),
   discard: null,
   held: null,
-  mode: 'family',
+  mode: __VALUE_UPGRADE__ ? 'value' : 'family',
 })
 const storeKey = 'skyjo-lab-coach-v1'
 const valid = (n: unknown) =>
@@ -32,7 +43,7 @@ try {
   const saved = JSON.parse(localStorage.getItem(storeKey) ?? 'null')
   if (
     saved &&
-    Object.hasOwn(policies, saved.mode) &&
+    modes.has(saved.mode) &&
     [saved.held, saved.discard].every((x) => x === null || valid(x)) &&
     Array.isArray(saved.board) &&
     saved.board.length === 12 &&
@@ -47,6 +58,9 @@ const el = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T
 const button = (id: string) => el<HTMLButtonElement>(id)
 const dialog = el<HTMLDialogElement>('picker')
+for (const [id, mode] of modes) {
+  el<HTMLSelectElement>('policy').add(new Option(mode.label, id))
+}
 let current: Action | null = null
 const spot = (slot: number) =>
   'column ' + (Math.floor(slot / 3) + 1) + ', row ' + ((slot % 3) + 1)
@@ -148,7 +162,7 @@ function render() {
   const ready = hidden <= 10
   current =
     ready && hidden > 0 && (s.discard !== null || s.held !== null)
-      ? policies[s.mode].choose(v, Math.random)
+      ? modes.get(s.mode)!.policy.choose(v, Math.random)
       : null
   const grid = el('grid')
   grid.replaceChildren()
@@ -235,6 +249,20 @@ function render() {
         ' in ' +
         loc +
         '.'
+    if (s.mode === 'value' && kind !== 'flip' && matches !== 2) {
+      const trade = (target ?? 5) - x
+      let bestClear = -Infinity
+      for (let col = 0; col < 12; col += 3) {
+        const column = b.slice(col, col + 3)
+        const others = column.filter(card => card !== x)
+        if (others.length === 1) bestClear = Math.max(bestClear, 2 * x + (others[0] ?? 5))
+      }
+      if (Number.isFinite(bestClear) && trade > bestClear)
+        reason += ' Counting a hidden card as 5, this saves ' + trade +
+          ' points. The best clear saves ' + bestClear + '.'
+      else if (s.held !== null && x > 3 && trade >= 4)
+        reason += ' This blind draw cuts ' + trade + ' points.'
+    }
     label = kind === 'flip' ? 'Enter revealed card' : 'Apply move'
   }
   el('advice').textContent = title
@@ -272,7 +300,7 @@ button('reset').onclick = () =>
   })
 el<HTMLSelectElement>('policy').onchange = (e) =>
   update(() => {
-    s.mode = (e.target as HTMLSelectElement).value as Mode
+    s.mode = (e.target as HTMLSelectElement).value
   })
 button('cancel').onclick = () => dialog.close()
 button('print').onclick = () => {

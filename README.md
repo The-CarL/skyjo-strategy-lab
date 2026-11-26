@@ -2,9 +2,11 @@
 
 A reproducible Skyjo simulator for benchmarking human heuristics, card-counting agents, and learned strategies, with a live coach for tabletop play.
 
-**Play at the table.** [Download the family kit](https://github.com/The-CarL/skyjo-strategy-lab/raw/refs/heads/main/downloads/skyjo-family-kit.zip), extract it, and open `skyjo-coach.html` in a browser that runs local HTML. It includes its code, styles, and trained weights. Enter the visible cards and tap the top discard. The coach highlights a move, handles the blind-draw decision, clears columns, and supports undo. The current board is saved on-device when browser storage is available. The [one-page strategy card](downloads/skyjo-strategy-card.pdf) works at any table, including phones whose file preview disables scripts.
+**Play at the table.** [Download the family kit](https://github.com/The-CarL/skyjo-strategy-lab/raw/refs/heads/main/downloads/skyjo-family-kit.zip), extract it, and open `skyjo-coach.html` in a browser that runs local HTML. It includes its code, styles, and trained weights. Enter the visible cards and tap the top discard. The coach highlights a move, handles the blind-draw decision, clears columns, and supports undo. New boards start with the **Clear or trade?** family rule. Select **Full-match neural network** for model advice using the same inputs. The current board is saved on-device when browser storage is available. The [one-page strategy card](downloads/skyjo-strategy-card.pdf) works at any table, including phones whose file preview disables scripts.
 
-**Read the experiment.** The [tournament report](reports/README.md) covers 57,128 complete games and includes the full head-to-head matrix. In the final four-player test, taking an immediate clear and otherwise keeping 3 or lower earned 35.1% of wins. The original keep-5 policy earned 14.1%. The comparison used the same opponents, deals, and seat rotations. These rates apply to that opponent mix.
+**Original benchmark.** The [tournament report](reports/README.md) covers 57,128 complete games and includes the full head-to-head matrix. In the final four-player test, taking an immediate clear and otherwise keeping 3 or lower earned 35.1% of wins. The original keep-5 policy earned 14.1%. The comparison used the same opponents, deals, and seat rotations. These rates apply to that opponent mix.
+
+**Phase two.** The [new experiments](reports/phase2/README.md) compare seven paper rules, a decision tree and neural networks trained on simulated match outcomes, and a scorer that evaluates every legal move. The [league](reports/phase2/league.md) used 2-, 4- and 6-player tables. The [printable family pilot](docs/family-pilot.md) lets you compare two strategies offline at your own table.
 
 ## Run the lab
 
@@ -32,6 +34,11 @@ The tournament runner plays each focal agent against the named opponent pool. Th
 | `counter` | Add the exact unseen-card histogram from the public discard history and visible cards. |
 | `rollout-N` | Compare a shortlist of candidates in N compatible hidden worlds and simulate to the end of the round. |
 | `tree`, `mlp` | Rank that board-only shortlist with trained regression models and a progress rule for visible exchanges. |
+| `family-value-upgrade` | Compare the savings from a clear and a regular exchange. After drawing blind, accept a visible saving of 4 or more. |
+| `guarded-prior` | Rank the same shortlist and use the same progress rule as the learned policies, using the fixed heuristic score. |
+| `match-mlp-11`, `match-tree-11` | Estimate centered match win credit on that shortlist with a neural network or decision tree. Seeds 29 and 47 are also available. |
+| `matched-round-mlp-11` | Matched neural comparison using the round score on the same sampled branches. |
+| `expanded-board`, `expanded-urgency`, `expanded-table` | Use fitted action weights to score every legal move, with increasing amounts of public table information. |
 
 Append `+open-pair` or `+open-random` to any CLI policy to change its two opening slots. The published battery uses two cards in different columns throughout.
 
@@ -39,7 +46,7 @@ Append `+open-pair` or `+open-random` to any CLI policy to change its two openin
 
 Implement `Policy.choose(view, rng)`, optionally request a public count with `count: true`, and register its name in `builtIn` or the CLI policy loader. `legal(view)` gives all valid actions. Draw selection and post-draw placement are separate decisions. Each policy gets its own random stream, isolated from the dealer. The state representation uses four columns of three slots; slot 0 is the top-left, slot 1 is directly below it. Replays record actual openings and actions, so later policy changes do not affect verification.
 
-### Reproduce training and the published battery
+### Reproduce the original training and battery
 
 Use Python 3.12. Install the training dependencies in a virtual environment. CPU training and simulations run locally; the project creates no AWS resources.
 
@@ -57,6 +64,10 @@ npm test
 
 The default dataset path is `work/training.jsonl`. Every generated training decision comes from a full game with a recorded seed. Training and validation are split by source game. The exported [model bundle](models/policies.json) runs in TypeScript without Python or a network connection. [Training metrics](reports/training.json) include reference predictions checked by the test suite. The [study report](reports/README.md) describes the teacher, model features, search limits, and evaluation design.
 
+### Reproduce phase two
+
+Use Node 24 and Python 3.12. After `npm ci`, run `npm run phase2:verify` to check the league summary and coach selections from the published shuffle blocks. This takes seconds and uses Python's standard library. To regenerate the training data, fits, and all three experimental studies on CPU, install `requirements-train.txt` in a virtual environment and run `npm run phase2:reproduce`. The [phase-two report](reports/phase2/README.md) links the recorded parameters and individual commands. Running each study from its published weights reproduces its evaluation independently of numerical differences between training libraries.
+
 ### Verify and package the offline coach
 
 ```sh
@@ -68,7 +79,7 @@ python scripts/package.py
 python scripts/package.py --verify
 ```
 
-The browser test exercises the download, all four advice modes, column clearing, blind draws, undo, refresh, mobile width, and the printable card. `CHROMIUM_PATH` selects an installed browser. If a managed browser limits file navigation, `COACH_LOOPBACK=1` serves only the local HTML document on loopback; the test disables networking during play.
+The browser test exercises the download, the shipped advice modes, column clearing, blind draws, undo, refresh, mobile width, and the printable card. `CHROMIUM_PATH` selects an installed browser. If a managed browser limits file navigation, `COACH_LOOPBACK=1` serves only the local HTML document on loopback; the test disables networking during play.
 
 ## Rules and conventions
 

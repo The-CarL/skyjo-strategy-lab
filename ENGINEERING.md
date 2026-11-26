@@ -22,6 +22,12 @@ Tests cover the deck, phases, hidden-information boundary, conservation, recycli
 
 The factory registry uses the public-minimal profile. Restore from the app repository, install dependencies with npm ci, and follow the README. Future policy changes should reserve fresh seed ranges and report their effect on full-game wins. The original table recommendation assumes classic rules and uses only visible cards on the player's board.
 
+## Whole-match strategy study
+
+The phase-two engine can resume a partial round in a sampled hidden world and continue through the match scoring threshold. The released neural net and tree use the original 18 board-and-action features. The CPU teacher labels their candidate moves using split win credit at match end. A matched control uses the end of the current round on exactly the same simulated trajectories. The [study record](reports/phase2/README.md) covers the independent seed ranges, model selection, paper rule, research-only full-table policies and release decisions.
+
+The coach reads its default paper rule and optional whole-match model from `web/release.json`. `npm run phase2:verify` recomputes the league statistics from compressed shuffle blocks and verifies the shipped choices. Only new board sessions adopt the new family default. Existing valid saved sessions retain the selected strategy. The release includes both printable rules and a printable, anonymous family comparison sheet. All research used the existing workspace CPU. Estimated additional AWS cost was $0.
+
 ## Factory guidance
 
 - [Product co-architecture](https://github.com/The-CarL/engineering-factory/blob/14ed9d222230ae85dd14b9baaf2a754e309b982f/standards/product-architecture.md)

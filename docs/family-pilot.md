@@ -2,6 +2,8 @@
 
 [Download the one-page score sheet](https://github.com/The-CarL/skyjo-strategy-lab/raw/refs/heads/main/downloads/skyjo-table-test.html). Open the HTML in a browser and print it in landscape. It works offline. Use letters for strategies and seat numbers for players. Nothing needs to be submitted.
 
+The family kit contains both rules. Use **A** for “Clear, then 3” on `skyjo-comparison-card.pdf` and **B** for “Clear or trade?” on `skyjo-strategy-card.pdf`.
+
 1. Choose two written strategies. Write their names under **A** and **B** once and set a target number of complete pairs before starting. One pair is two full matches. The same person tests both strategies against the same players in the same seats within a pair. Keep scoring and house rules consistent. The other players play as usual.
 2. Flip a coin before each pair. Heads means A first, tails means B first. Use the other strategy for the second match. Start each match at zero with a fresh shuffle. Use the assigned strategy for every round of that match. Tally any deliberate departures under **Overrides**, even if the move works.
 3. At match end, enter each seat’s cumulative points and circle the lowest score or scores. **F** is the person testing the strategy. If F wins alone, record 1 credit. If F ties for lowest with a total of k winners, record 1/k. Otherwise record 0. Minutes and an example of a hard decision are optional. If play stops after one match, retain the row, mark the pair incomplete and record why.

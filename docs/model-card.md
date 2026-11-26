@@ -1,4 +1,10 @@
-# Model card
+# Skyjo strategy models
+
+## Phase-two models
+
+The whole-match network and CART tree estimate a move’s win credit relative to other candidates in the same position. The matched round-target network uses an end-of-round reward on the same simulations. An independently tuned scorer can also rank every legal action. The [phase-two report](../reports/phase2/README.md) describes training, scores on previously unseen games, and the coach selection criteria. The [fit record](../reports/match-training.json) contains the parameters, effective iterations, validation metrics, and parity fixtures.
+
+## Original models
 
 The two exported estimators predict a candidate's advantage in simulated score-margin units. The goal of deployment is game win share. Predicted scores are useful for ordering moves; they are not calibrated win probabilities.
 

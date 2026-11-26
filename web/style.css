@@ -370,3 +370,8 @@ dialog h2 {
     width: 145mm;
   }
 }
+@media print {
+  #rulecard { padding: 10mm; width: 143mm; }
+  #rulecard h1 { font-size: 33px; }
+  #rulecard p, #rulecard li { font-size: 14px; line-height: 1.4; }
+}
