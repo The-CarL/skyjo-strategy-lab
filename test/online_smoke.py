@@ -123,6 +123,7 @@ def run():
         opened = api_response(phone, "POST", path, lambda: choose_opening(phone)).json()["game"]
         stage(phone, "source")
         assert opened["players"][0]["board"].count(None) == 10
+        expect(button(phone, "Take discard")).to_have_accessible_description(f"Top discard is {opened['discard']}.")
         drawn = api_response(phone, "POST", path, button(phone, "Draw blind").click).json()["game"]
         assert drawn["phase"] == "held" and -2 <= drawn["held"] <= 12
         snapshot = api_response(phone, "GET", "/api/games/current", phone.reload).json()["game"]
@@ -158,7 +159,8 @@ def run():
         no_horizontal_scroll(phone)
         assert not errors, errors
         browser.close()
-        print("Hosted mobile/desktop: setup, isolated profiles, blind draw, resume, recovery, full match and shared history passed.")
+        print(f"Hosted mobile and desktop play passed across {len(done['history'])} rounds, "
+              "including isolated profiles, draw, resume, recovery, and shared history.")
 
 
 if __name__ == "__main__":

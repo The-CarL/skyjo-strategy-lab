@@ -427,6 +427,9 @@ function pile(
     '" aria-label="' +
     html(label) +
     '"' +
+    (action === 'take' && value !== null
+      ? ' aria-description="Top discard is ' + value + '."'
+      : '') +
     (enabled ? ' aria-pressed="' + pressed + '"' : '') +
     disabled(!enabled || busy || !!pending) +
     '><span class="slot ' +
