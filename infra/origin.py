@@ -93,6 +93,17 @@ class Origin:
     def config(self):
         return aws("cloudfront", "get-distribution-config", {"Id": self.dist["id"]})
 
+    def routing_readback(self, expected):
+        # GetDistribution can briefly return the previous revision after UpdateDistribution succeeds.
+        for _ in range(30):
+            current = aws("cloudfront", "get-distribution", {"Id": self.dist["id"]})["Distribution"]["DistributionConfig"]
+            if (current["DefaultCacheBehavior"]["CachePolicyId"] == expected["DefaultCacheBehavior"]["CachePolicyId"]
+                    and current["Origins"]["Items"][0].get("OriginAccessControlId") ==
+                    expected["Origins"]["Items"][0].get("OriginAccessControlId")):
+                break
+            time.sleep(3)
+        return self.domain.distribution_readback(expected)
+
     def verify_policy(self):
         oac = aws("cloudfront", "get-origin-access-control", {"Id": self.rows["origin_access"]["id"]})
         actual = oac["OriginAccessControl"]["OriginAccessControlConfig"]
@@ -157,7 +168,7 @@ class Origin:
                 self.d.mutate("cloudfront", "update-distribution", {
                     "Id": self.dist["id"], "IfMatch": current["ETag"],
                     "DistributionConfig": signed_config(deepcopy(obj), self.rows)})
-            self.domain.distribution_readback(signed_config(config, self.rows))
+            self.routing_readback(signed_config(config, self.rows))
             self.d.mutate("cloudfront", "tag-resource", {"Resource": self.arn, "Tags": {"Items": [
                 {"Key": k, "Value": v} for k,v in self.d.latest.items()]}})
             self.dist["details"]["signed_origin"] = True
@@ -186,11 +197,7 @@ class Origin:
             info["DefaultCacheBehavior"]["CachePolicyId"] = MANAGED_STATIC
             self.d.mutate("cloudfront", "update-distribution", {"Id": self.dist["id"],
                 "IfMatch": current["ETag"], "DistributionConfig": info})
-        for _ in range(20):
-            if self.config()["DistributionConfig"]["DefaultCacheBehavior"]["CachePolicyId"] == MANAGED_STATIC:
-                break
-            time.sleep(2)
-        result = self.domain.distribution_readback(expected)
+        result = self.routing_readback(expected)
         self.dist["details"]["managed_static"] = True
         self.dist.update(last_run=self.d.run, last_commit=self.d.commit, last_time=timestamp())
         self.d.mutate("cloudfront", "tag-resource", {"Resource": self.arn, "Tags": {"Items": [

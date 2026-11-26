@@ -55,6 +55,17 @@ class OriginTest(unittest.TestCase):
             self.grants[sid] = {"Sid": sid, "Effect": "Allow", "Action": action,
                                 "Resource": self.d.lambda_arn, "Condition": cond, "Principal": principal}
 
+    def test_readback_waits_for_the_published_configuration(self):
+        target = {"DefaultCacheBehavior": {"CachePolicyId": "static"}, "Origins": {"Items": [{"OriginAccessControlId": "oac"}]}}
+        previous = {"DefaultCacheBehavior": {"CachePolicyId": "disabled"}, "Origins": {"Items": [{}]}}
+        self.api.dist["id"] = "our-edge"
+        def view(config):
+            return {"Distribution": {"DistributionConfig": config}}
+        with patch("origin.aws", side_effect=[view(previous), view(target)]) as read, patch("origin.time.sleep"):
+            self.api.routing_readback(target)
+        self.assertEqual(read.call_count, 2)
+        self.domain.distribution_readback.assert_called_once_with(target)
+
     def test_lock_resumes_after_interrupted_permission_removal(self):
         def read(service, operation, _payload):
             self.assertEqual(operation, "get-function-url-config")
