@@ -14,6 +14,7 @@ from online import Deployment, Recovery, aws, require
 
 HOST = "skyjo.carloperottino.com"
 ZONE = "carloperottino.com"
+APPROVAL = "Publish skyjo.carloperottino.com over HTTPS for the Skyjo game and family coach"
 CLOUDFRONT_ZONE = "Z2FDTNDATAQYW2"
 CACHE_POLICY = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"  # AWS Managed-CachingDisabled
 ORIGIN_POLICY = "b689b0a8-53d0-40ab-baf2-68738e2966ac"  # AWS Managed-AllViewerExceptHostHeader
@@ -52,7 +53,7 @@ class Domain:
 
     def note(self, key, identifier, kind, parent, **details):
         self.d.remember(key, identifier, kind, parent)
-        self.resources[key]["details"] = details
+        self.resources[key]["details"] = {"approval": APPROVAL, **details}
         self.d.save()
 
     def dns(self, key, records, parent):
@@ -198,6 +199,9 @@ class Domain:
         self.dns("canonical_dns", [{"Name": HOST, "Type": record_type, "AliasTarget": {
             "HostedZoneId": CLOUDFRONT_ZONE, "DNSName": dist["DomainName"], "EvaluateTargetHealth": False}}
             for record_type in ("A", "AAAA")], "distribution")
+        for key in ("certificate", "domain_validation", "distribution", "canonical_dns"):
+            self.resources[key]["details"]["approval"] = APPROVAL
+        self.d.save()
         Recovery(self.d).backup()
         print(json.dumps({"hostname": HOST, "tls": "verified", "dns": "INSYNC"}))
 

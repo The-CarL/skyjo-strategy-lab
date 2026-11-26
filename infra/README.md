@@ -53,4 +53,22 @@ The update checks that the saved journal is a prefix of the local journal, uses 
 
 For example, 10,000 requests averaging 250 ms each at 256 MiB consume 625 GB-seconds of Lambda compute, about $0.01 at standard arm64 rates before free tier. A workload with 100,000 DynamoDB write request units and 50,000 read request units costs about $0.07 for requests. Storage adds roughly $0.25 per GB-month beyond applicable free tier. Transactional writes consume twice the units of equivalent ordinary writes. Family use at this scale fits below an estimated $1/month, including modest logs and bandwidth. Actual charges vary with usage and retention. A lifetime dollar ceiling requires tracking cumulative charges and changing or ending the service when the remaining budget approaches zero.
 
-A future custom domain can use CloudFront with this HTTPS origin, an ACM certificate and a DNS record. The current release creates the Lambda URL only.
+## Canonical HTTPS hostname
+
+[skyjo.carloperottino.com](https://skyjo.carloperottino.com/) serves the existing Lambda function URL through one pay-as-you-go CloudFront distribution. The distribution terminates TLS with an exact-host ACM certificate in us-east-1, redirects HTTP viewers to HTTPS and requires TLS 1.2 to the origin. It forwards Authorization, query strings and every HTTP method. CloudFront supplies the Lambda origin's Host header. AWS’s managed CachingDisabled policy and zero error-cache TTLs keep each private response on its own request. The existing function URL continues to work.
+
+Use the same clean checkout, allocated project role, private inventory and selected public Route 53 zone as the release. Read the current records before every change. The certificate and distribution receive project provenance tags. The private recovery copy tracks the exact certificate, validation record, distribution, canonical A and AAAA aliases, their zone, ownership and change IDs.
+
+```bash
+export FACTORY_AWS_EXECUTABLE="$PWD/infra/domain.py"
+export FACTORY_AWS_EXECUTABLE_SHA256="$(sha256sum "$FACTORY_AWS_EXECUTABLE" | cut -d' ' -f1)"
+stage=certificate
+run_id="domain-$stage-$(date -u +%Y%m%dT%H%M%SZ)"
+factory-aws --exec --record "$SKYJO_OPS/$run_id.jsonl" \
+  --output "$SKYJO_OPS/$run_id.result.json" -- "$FACTORY_AWS_EXECUTABLE" \
+  "$stage" --run-id "$run_id" --inventory "$SKYJO_OPS/inventory.json"
+```
+
+Run this command for `certificate`, then `distribution` after ACM issues the certificate, then `publish` after CloudFront reports Deployed. Select a fresh run ID on each attempt. The certificate stage creates the single ACM-supplied CNAME for DNS validation and automatic renewal. The publish stage submits one create-only Route 53 batch for the IPv4 and IPv6 aliases, waits for INSYNC and checks both record values. Keep the validation CNAME for renewal. If a provider write times out, reconcile its exact resource or change ID against the private operation journal before retrying.
+
+CloudFront's monthly pay-as-you-go charges depend on request volume and bytes delivered. The ACM public certificate for this distribution, SNI TLS, and alias lookups to CloudFront have no separate fixed monthly charge. The existing hosted zone and Lambda service are reused. At the family-scale example above, 10,000 North American HTTPS requests and 250 MB of outbound traffic add approximately $0.03 before free allowances. [CloudFront pricing](https://aws.amazon.com/cloudfront/pricing/pay-as-you-go/) · [ACM pricing](https://aws.amazon.com/certificate-manager/pricing/)
