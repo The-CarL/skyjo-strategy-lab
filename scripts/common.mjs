@@ -1,8 +1,10 @@
 import { readFileSync, mkdirSync, writeFileSync, renameSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { parseArgs } from 'node:util'
-import { learned } from '../src/model.ts'
+import { guardedPrior, learned } from '../src/model.ts'
 import { builtIn } from '../src/policies.ts'
+import { familyPolicy } from '../src/family.ts'
+import { expandedPolicy } from '../src/expanded.ts'
 
 export function options(spec) {
   return parseArgs({
@@ -20,6 +22,10 @@ export function integer(value, min, max, label) {
     throw Error('Invalid ' + label + ' (' + min + '–' + max + ')')
   return n
 }
+function modelBundle(filename) {
+  return JSON.parse(readFileSync(new URL('../models/' + filename, import.meta.url)))
+}
+
 export function policy(name) {
   const suffix = /^(.*)\+open-(pair|random)$/.exec(name)
   if (suffix)
@@ -33,14 +39,16 @@ export function policy(name) {
         return [a, b >= a ? b + 1 : b]
       },
     }
+  if (name === 'guarded-prior') return guardedPrior
   if (name === 'tree' || name === 'mlp')
-    return learned(
-      JSON.parse(
-        readFileSync(new URL('../models/policies.json', import.meta.url)),
-      ),
-      name,
-    )
-  return builtIn(name)
+    return learned(modelBundle('policies.json'), name)
+  const match = /^match-(mlp|tree)-(11|29|47)$/.exec(name)
+  if (match) return { ...learned(modelBundle('match-s' + match[2] + '.json'), match[1]), name }
+  if (name === 'matched-round-mlp-11')
+    return { ...learned(modelBundle('matched-round-s11.json'), 'mlp'), name }
+  const expanded = /^expanded-(board|urgency|table)$/.exec(name)
+  if (expanded) return expandedPolicy(modelBundle('expanded.json'), expanded[1])
+  return familyPolicy(name) ?? builtIn(name)
 }
 export function save(path, data) {
   mkdirSync(dirname(path), { recursive: true })

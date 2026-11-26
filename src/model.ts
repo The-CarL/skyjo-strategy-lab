@@ -1,4 +1,4 @@
-import type { Policy } from './engine.ts'
+import type { Policy, View } from './engine.ts'
 import { candidates, featureNames } from './policies.ts'
 export interface Tree {
   type: 'tree'
@@ -41,6 +41,22 @@ export function predict(model: Tree | Net, x: number[]): number {
   })
   return layer[0]
 }
+export function guardedCandidates(v: View) {
+  // A learned value estimate can otherwise cycle visible cards forever in a duel.
+  // Every exchange either reveals a slot, clears a column, or lowers a visible value.
+  return candidates(v).filter((c) => {
+    if (c.a.kind === 'draw' || c.a.kind === 'flip') return true
+    const target = v.boards[v.turn][c.a.slot]
+    return target === null || (v.held ?? v.discard) < target || c.f[8] === 2
+  })
+}
+export const guardedPrior: Policy = {
+  name: 'guarded-prior',
+  choose(v) {
+    return guardedCandidates(v).sort((a, b) => b.value - a.value)[0].a
+  },
+}
+
 export function learned(bundle: Bundle, key: 'tree' | 'mlp'): Policy {
   if (
     bundle.version !== 1 ||
@@ -50,13 +66,7 @@ export function learned(bundle: Bundle, key: 'tree' | 'mlp'): Policy {
   return {
     name: key,
     choose(v) {
-      // A learned value estimate can otherwise cycle visible cards forever in a duel.
-      // Every exchange either reveals a slot, clears a column, or lowers a visible value.
-      const choices = candidates(v).filter((c) => {
-        if (c.a.kind === 'draw' || c.a.kind === 'flip') return true
-        const target = v.boards[v.turn][c.a.slot]
-        return target === null || (v.held ?? v.discard) < target || c.f[8] === 2
-      })
+      const choices = guardedCandidates(v)
       for (const c of choices) c.value = predict(bundle[key], c.f)
       return choices.sort((a, b) => b.value - a.value)[0].a
     },

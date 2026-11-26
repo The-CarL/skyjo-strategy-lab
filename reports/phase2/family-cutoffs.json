@@ -1,0 +1,173 @@
+{
+  "stage": "cutoff-audit",
+  "tables": [
+    {
+      "start": 1300000,
+      "count": 600,
+      "players": 4,
+      "pool": [
+        "threshold-3+clear+pairs",
+        "threshold-4+clear",
+        "threshold-6"
+      ],
+      "agents": [
+        "family-3-3",
+        "family-5-3",
+        "family-3-5",
+        "family-5-5"
+      ],
+      "games": 9600,
+      "raw": "work/phase2/family/cutoffs-published.json",
+      "rows": [
+        {
+          "id": "family-3-3",
+          "win": 0.35125,
+          "vsBaseline": {
+            "mean": 0,
+            "ci95": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "family-5-3",
+          "win": 0.30791666666666667,
+          "vsBaseline": {
+            "mean": -0.043333333333333335,
+            "ci95": [
+              -0.06019277610616177,
+              -0.0264738905605049
+            ]
+          }
+        },
+        {
+          "id": "family-3-5",
+          "win": 0.21479166666666666,
+          "vsBaseline": {
+            "mean": -0.13645833333333332,
+            "ci95": [
+              -0.15603189284450775,
+              -0.11688477382215888
+            ]
+          }
+        },
+        {
+          "id": "family-5-5",
+          "win": 0.22680555555555557,
+          "vsBaseline": {
+            "mean": -0.12444444444444443,
+            "ci95": [
+              -0.14358868622205892,
+              -0.10530020266682993
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "start": 1310000,
+      "count": 600,
+      "players": 4,
+      "pool": [
+        "board",
+        "mlp",
+        "threshold-2+clear"
+      ],
+      "agents": [
+        "family-3-3",
+        "family-5-3",
+        "family-3-5",
+        "family-5-5"
+      ],
+      "games": 9600,
+      "raw": "work/phase2/family/cutoffs-mixed.json",
+      "rows": [
+        {
+          "id": "family-3-3",
+          "win": 0.296875,
+          "vsBaseline": {
+            "mean": 0,
+            "ci95": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "family-5-3",
+          "win": 0.28840277777777773,
+          "vsBaseline": {
+            "mean": -0.008472222222222221,
+            "ci95": [
+              -0.029249586699367322,
+              0.01230514225492288
+            ]
+          }
+        },
+        {
+          "id": "family-3-5",
+          "win": 0.13666666666666666,
+          "vsBaseline": {
+            "mean": -0.16020833333333334,
+            "ci95": [
+              -0.18079430511421904,
+              -0.13962236155244764
+            ]
+          }
+        },
+        {
+          "id": "family-5-5",
+          "win": 0.16854166666666667,
+          "vsBaseline": {
+            "mean": -0.12833333333333333,
+            "ci95": [
+              -0.15012594421579495,
+              -0.1065407224508717
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "saving": {
+    "start": 1100000,
+    "count": 600,
+    "players": 4,
+    "pool": [
+      "threshold-3+clear+pairs",
+      "threshold-4+clear",
+      "threshold-6"
+    ],
+    "agents": [
+      "threshold-3+clear",
+      "family-save5-hidden3"
+    ],
+    "games": 4800,
+    "raw": "work/phase2/family/gap-five-published.json",
+    "rows": [
+      {
+        "id": "threshold-3+clear",
+        "win": 0.3444444444444445,
+        "vsBaseline": {
+          "mean": 0,
+          "ci95": [
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "id": "family-save5-hidden3",
+        "win": 0.31333333333333335,
+        "vsBaseline": {
+          "mean": -0.031111111111111107,
+          "ci95": [
+            -0.049450157516387636,
+            -0.012772064705834581
+          ]
+        }
+      }
+    ]
+  }
+}

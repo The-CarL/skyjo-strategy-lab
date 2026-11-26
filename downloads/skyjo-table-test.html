@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Skyjo family table test</title>
+<style>
+:root { color-scheme: light; font: 15px/1.36 system-ui, sans-serif; color: #172b24; }
+* { box-sizing: border-box; }
+body { padding: 1.5rem; margin: auto; max-width: 1120px; background: #fff; }
+h1 { margin: 0; font: 600 2.2rem/1.05 Georgia, serif; }
+h2 { margin: .65rem 0 .2rem; font-size: 1rem; }
+p { margin: .35rem 0; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+button { border: 1px solid currentColor; background: #fff; padding: .5rem .85rem; color: #172b24; border-radius: .4rem; font: inherit; cursor: pointer; }
+.settings, .sum { display: flex; gap: 1.3rem; flex-wrap: wrap; margin: .75rem 0; }
+.settings span, .sum span { display: inline-flex; align-items: baseline; white-space: nowrap; gap: .35rem; }
+.line { display: inline-block; border-bottom: 1px solid #57645e; }
+.long { width: 11rem; } .medium { width: 6rem; } .short { width: 3rem; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: .84rem; text-align: center; table-layout: fixed; }
+th, td { border: 1px solid #818781; padding: .15rem; }
+thead th { line-height: 1.15; height: 1.6rem; background: #ecf1e9; font-weight: 600; }
+tbody th { color: #263d31; }
+tbody td { height: 1.65rem; }
+.start { border-top: 2px solid #516052; }
+.note { min-height: 1.6rem; margin: .35rem 0 .65rem; border-bottom: 1px solid #879287; }
+@media (max-width:700px) { body { padding: .85rem; } .settings, .sum { gap: .6rem; } h1 { font-size: 1.65rem; } }
+@page { size: landscape; margin: 11mm; }
+@media print {
+  :root { font-size: 10pt; }
+  body { margin: 0; padding: 0; max-width: none; }
+  button { display: none; }
+  .scroll { overflow: visible; }
+  table { min-width: 0; }
+  thead th { background: transparent; }
+  tr { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<header><h1>Skyjo family table test</h1><button type="button" onclick="window.print()">Print sheet</button></header>
+<p>One person tests two strategies over pairs of complete matches. Use the same players, seats and house rules within each pair.</p>
+<div class="settings"><span><b>Strategy A</b> <i class="line long"></i></span><span><b>Strategy B</b> <i class="line long"></i></span><span>Planned pairs <i class="line short"></i></span></div>
+<p>House rules <i class="line long"></i> &nbsp; Before each pair, flip a coin. Heads = A first, tails = B first. Use the other strategy second. Start each match at zero and shuffle fresh.</p>
+<h2>Match results</h2>
+<p>Enter final points in seat order. F is the person testing the strategy. Circle all lowest totals. Leave unused seats blank.</p>
+<div class="scroll">
+<table aria-label="Match results by pair, policy and seat">
+<colgroup><col style="width:4%"><col style="width:5%"><col style="width:6%"></colgroup>
+<colgroup span="8"></colgroup>
+<colgroup><col style="width:7%"><col style="width:7%"><col style="width:8%"><col style="width:6%"></colgroup>
+<thead><tr><th rowspan="2" scope="col">Pair</th><th rowspan="2" scope="col">Game</th><th rowspan="2" scope="col">A / B</th><th colspan="8" scope="colgroup">Final points</th><th rowspan="2" scope="col">No. of winners</th><th rowspan="2" scope="col">F win credit</th><th rowspan="2" scope="col">Overrides</th><th rowspan="2" scope="col">Min.</th></tr>
+<tr><th scope="col">F</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th><th scope="col">7</th><th scope="col">8</th></tr></thead>
+<tbody>
+        <tr class="start"><th scope="rowgroup" rowspan="2">1</th><th scope="row">1</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="end"><th scope="row">2</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</tbody>
+<tbody>
+        <tr class="start"><th scope="rowgroup" rowspan="2">2</th><th scope="row">1</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="end"><th scope="row">2</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</tbody>
+<tbody>
+        <tr class="start"><th scope="rowgroup" rowspan="2">3</th><th scope="row">1</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="end"><th scope="row">2</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</tbody>
+<tbody>
+        <tr class="start"><th scope="rowgroup" rowspan="2">4</th><th scope="row">1</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="end"><th scope="row">2</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p>F earns 1 for a solo win, ½ in a two-way win, ⅓ in a three-way win, and so on. Otherwise enter 0. Tally departures from the assigned strategy under Overrides. Minutes are optional.</p>
+<p class="note">Optional hard choice or reason for an incomplete pair (include pair and strategy)</p>
+<h2>Compare complete pairs</h2>
+<div class="sum"><span>Complete pairs <i class="line short"></i></span><span>A total credit <i class="line short"></i></span><span>B total credit <i class="line short"></i></span><span>Incomplete pairs <i class="line short"></i></span></div>
+<p>Each strategy’s win share = its total credit from complete pairs ÷ number of complete pairs. If none are complete, leave shares blank. Multiply A minus B by 100 for the difference in percentage points.</p>
+<div class="sum"><span>A win share <i class="line short"></i>%</span><span>B win share <i class="line short"></i>%</span><span>Difference <i class="line short"></i> points</span></div>
+<p>Small samples can swing with one deal. Use overrides and difficult choices to judge how easy the rules were to follow.</p>
+</body>
+</html>

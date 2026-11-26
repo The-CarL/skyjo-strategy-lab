@@ -1,0 +1,127 @@
+{
+  "stage": "confirmation",
+  "baseline": "threshold-3+clear",
+  "frozen": "family-value-upgrade",
+  "tables": [
+    {
+      "start": 2700000,
+      "count": 400,
+      "players": 4,
+      "pool": [
+        "threshold-3+clear+pairs",
+        "threshold-4+clear",
+        "threshold-6"
+      ],
+      "agents": [
+        "threshold-3+clear",
+        "family-value-upgrade"
+      ],
+      "games": 3200,
+      "raw": "work/phase2/family/confirm-published.json",
+      "rows": [
+        {
+          "id": "threshold-3+clear",
+          "win": 0.3495833333333333,
+          "vsBaseline": {
+            "mean": 0,
+            "ci95": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "family-value-upgrade",
+          "win": 0.3820833333333333,
+          "vsBaseline": {
+            "mean": 0.0325,
+            "ci95": [
+              0.013929447003481824,
+              0.05107055299651818
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "start": 2710000,
+      "count": 400,
+      "players": 4,
+      "pool": [
+        "board",
+        "mlp",
+        "threshold-2+clear"
+      ],
+      "agents": [
+        "threshold-3+clear",
+        "family-value-upgrade"
+      ],
+      "games": 3200,
+      "raw": "work/phase2/family/confirm-mixed.json",
+      "rows": [
+        {
+          "id": "threshold-3+clear",
+          "win": 0.2821875,
+          "vsBaseline": {
+            "mean": 0,
+            "ci95": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "family-value-upgrade",
+          "win": 0.3596875,
+          "vsBaseline": {
+            "mean": 0.0775,
+            "ci95": [
+              0.05460090019389795,
+              0.10039909980610205
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "start": 2720000,
+      "count": 400,
+      "players": 4,
+      "pool": [
+        "table",
+        "counter",
+        "threshold-3+clear+pairs"
+      ],
+      "agents": [
+        "threshold-3+clear",
+        "family-value-upgrade"
+      ],
+      "games": 3200,
+      "raw": "work/phase2/family/confirm-observers.json",
+      "rows": [
+        {
+          "id": "threshold-3+clear",
+          "win": 0.2440625,
+          "vsBaseline": {
+            "mean": 0,
+            "ci95": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "family-value-upgrade",
+          "win": 0.2984375,
+          "vsBaseline": {
+            "mean": 0.054375,
+            "ci95": [
+              0.030716002369930148,
+              0.07803399763006985
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

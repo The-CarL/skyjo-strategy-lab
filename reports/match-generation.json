@@ -1,0 +1,64 @@
+{
+  "header": {
+    "schema": "paired-match-round-v1",
+    "features": [
+      "draw",
+      "flip",
+      "incoming",
+      "target",
+      "hiddenTarget",
+      "hiddenLeft",
+      "ownEstimate",
+      "highest",
+      "columnMatches",
+      "pairBroken",
+      "clearValue",
+      "gain",
+      "revealsLast",
+      "mateUnknown",
+      "mateSum",
+      "pairValue",
+      "bestVisibleGain",
+      "boardSize"
+    ],
+    "games": 480,
+    "samples": 16,
+    "limit": 24,
+    "start": 6000000,
+    "trainingSeats": [
+      4,
+      4,
+      2,
+      3,
+      6,
+      8
+    ],
+    "rules": [
+      "threshold-2+clear",
+      "threshold-3+clear",
+      "threshold-3+clear+pairs",
+      "threshold-4+clear",
+      "threshold-4",
+      "threshold-5",
+      "threshold-5+clear",
+      "threshold-5+clear+pairs",
+      "threshold-6",
+      "threshold-7+clear"
+    ],
+    "specialists": [
+      "board",
+      "table",
+      "counter",
+      "mlp"
+    ],
+    "specialistLineupProbability": 0.125,
+    "opening": "spread",
+    "continuation": "one sampled policy per seat per world held through game end"
+  },
+  "workers": 2,
+  "decisions": 11520,
+  "simulatedMatches": 611104,
+  "simulatedRounds": 1226057,
+  "simulatedMoves": 83345413,
+  "wallSeconds": 68.92453178999999
+}

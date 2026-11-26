@@ -193,13 +193,70 @@ export function score(s: Round): number[] {
   return raw
 }
 export type Log = { round: number; seat: number; action: Action }
+type MoveObserver = (v: View, action: Action, round: number) => void
+type OpeningObserver = (openings: number[][]) => void
+type ScoreObserver = (roundScores: number[], updatedTotals: number[]) => void
+
+interface MatchOptions {
+  initial?: Round
+  onMove?: MoveObserver
+  onRound?: OpeningObserver
+  onCurrentRoundScore?: ScoreObserver
+}
+
 export function play(
   policies: Policy[],
   seed: number,
-  onMove?: (v: View, action: Action, round: number) => void,
-  onRound?: (openings: number[][]) => void,
+  onMove?: MoveObserver,
+  onRound?: OpeningObserver,
 ) {
-  const totals = policies.map(() => 0)
+  return simulateMatch(policies, seed, { onMove, onRound })
+}
+
+/** Continue a concrete or sampled world to the ordinary match endpoint.
+ * Takes ownership of the supplied round, whose totals are the scores BEFORE
+ * this round. A finished round is scored exactly once before the next deal.
+ * The seed controls fresh continuation randomness (including per-seat policy
+ * streams), rather than restoring any historical RNG state. Reuse it across
+ * alternative actions to pair subsequent deals. The returned round count
+ * includes this round; the move count includes only decisions made here.
+ * The optional observer receives the supplied round's scored points and new
+ * totals by value, including when the initial round is already finished.
+ */
+export function resumeMatch(
+  initial: Round,
+  policies: Policy[],
+  seed: number,
+  onCurrentRoundScore?: ScoreObserver,
+) {
+  const seats = policies.length
+  if (
+    seats < 2 ||
+    seats > 8 ||
+    initial.hands.length !== seats ||
+    initial.totals.length !== seats
+  )
+    throw Error('Round and policies must describe the same 2–8 seats')
+  if (initial.totals.some((n) => !Number.isSafeInteger(n) || n >= 100))
+    throw Error('Expected cumulative scores from before the active round')
+  const validSeat = (seat: number) =>
+    Number.isInteger(seat) && seat >= 0 && seat < seats
+  if (
+    !validSeat(initial.turn) ||
+    (initial.closer !== null && !validSeat(initial.closer))
+  )
+    throw Error('Invalid turn or closing seat')
+  if (initial.finished && (initial.closer === null || initial.held !== null))
+    throw Error('A finished round requires a closer and no held card')
+  return simulateMatch(policies, seed, { initial, onCurrentRoundScore })
+}
+
+function simulateMatch(
+  policies: Policy[],
+  seed: number,
+  { initial, onMove, onRound, onCurrentRoundScore }: MatchOptions,
+) {
+  const totals = initial ? [...initial.totals] : policies.map(() => 0)
   const policyRng = policies.map((_, i) =>
     random(seed ^ Math.imul(i + 1, 0x45d9f3b)),
   )
@@ -208,12 +265,19 @@ export function play(
     moves = 0
   while (Math.max(...totals) < 100) {
     const rng = random(seed ^ Math.imul(++rounds, 0x9e3779b1))
-    const openings = policies.map(
-      (p, i) =>
-        p.opening?.(random(seed ^ Math.imul(rounds, 0xc2b2ae35) ^ i)) ?? [0, 3],
-    )
-    onRound?.(openings.map((pair) => [...pair]))
-    const s = deal(totals, rng, starter, openings)
+    let s: Round
+    if (rounds === 1 && initial) {
+      s = initial
+    } else {
+      const openings = policies.map(
+        (p, i) =>
+          p.opening?.(random(seed ^ Math.imul(rounds, 0xc2b2ae35) ^ i)) ?? [
+            0, 3,
+          ],
+      )
+      onRound?.(openings.map((pair) => [...pair]))
+      s = deal(totals, rng, starter, openings)
+    }
     while (!s.finished) {
       const p = policies[s.turn]
       const v = observe(s, Boolean(onMove || p.count))
@@ -233,7 +297,9 @@ export function play(
             ']',
         )
     }
-    score(s).forEach((x, i) => (totals[i] += x))
+    const points = score(s)
+    points.forEach((x, i) => (totals[i] += x))
+    if (rounds === 1) onCurrentRoundScore?.(points, [...totals])
     starter = s.closer
   }
   const low = Math.min(...totals)
