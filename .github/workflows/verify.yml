@@ -32,3 +32,14 @@ jobs:
           python -m pip install playwright==1.62.0
           CHROMIUM_PATH="$(command -v google-chrome)" python test/coach_smoke.py
           python scripts/package.py --verify
+      - name: Play and resume a hosted match
+        run: |
+          npm run online:package
+          node scripts/dev-online.mjs > "$RUNNER_TEMP/skyjo-online.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:4175/ -o /dev/null; then break; fi
+            sleep 1
+          done
+          CHROMIUM_PATH="$(command -v google-chrome)" python test/online_smoke.py

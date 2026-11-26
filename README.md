@@ -8,6 +8,14 @@ A reproducible Skyjo simulator for benchmarking human heuristics, card-counting 
 
 **Phase two.** The [new experiments](reports/phase2/README.md) compare seven paper rules, a decision tree and neural networks trained on simulated match outcomes, and a scorer that evaluates every legal move. The [league](reports/phase2/league.md) used 2-, 4- and 6-player tables. The [printable family pilot](docs/family-pilot.md) lets you compare two strategies offline at your own table.
 
+## Play a match online
+
+Choose an engine for each opposing seat. You play one board, from your two opening reveals through the final scoring round. Drawing from the stock lets you exchange the drawn card or discard it and flip a hidden card. Taking the visible discard requires an exchange. Rounds continue until a player reaches 100 total points. The lowest total wins.
+
+The online game saves your progress and results on the server. Return with the same browser to resume. Keep a private copy of your recovery key to access the same matches on another browser or hostname. Anyone who has that key can access and play your matches. The downloadable family kit is for coaching a game played with physical cards.
+
+For local development, run `npm ci` and `npm run online:dev`, then open `http://127.0.0.1:4175/`. The development server keeps test games in memory for the lifetime of the process. `npm run online:package` produces the server and browser assets together in `online-dist/skyjo-online.zip`.
+
 ## Run the lab
 
 Use Node 24 or later. Node runs the TypeScript simulation directly. The only JavaScript development dependencies are the type checker and offline bundler.

@@ -75,11 +75,15 @@ export function createMemoryStore() {
   }
 }
 
-function conditionFailure(error) {
+// A response without cancellation details also needs a consistent readback from the API.
+function needsReadback(error) {
   if (error.name === 'ConditionalCheckFailedException') return true
   return (
     error.name === 'TransactionCanceledException' &&
-    error.CancellationReasons?.some((r) => r.Code === 'ConditionalCheckFailed')
+    (!error.CancellationReasons?.length ||
+      error.CancellationReasons.some(
+        (r) => r.Code === 'ConditionalCheckFailed',
+      ))
   )
 }
 function retryConflict(error) {
@@ -138,7 +142,7 @@ export function createDynamoStore({ tableName, client } = {}) {
         await db.send(cmd)
         return true
       } catch (error) {
-        if (conditionFailure(error)) return false
+        if (needsReadback(error)) return false
         if (!retryConflict(error) || attempt >= 2) throw error
         await sleep(15 * 2 ** attempt + Math.random() * 20)
       }

@@ -12,9 +12,9 @@ The shared operating rules in `AGENTS.md` are available locally to any selected 
 
 The lab combines a deterministic classic Skyjo engine, public player observations, configurable opponents, reproducible tournaments, replay verification, CPU model training, and an offline coach. The [README](README.md) lists exact commands. The [results](reports/README.md) include seed-clustered comparisons and released weights. The [model card](docs/model-card.md) records the training contract and limitations.
 
-Carlo authorized pushing the project publicly and selected a downloadable coach. The ZIP and printable PDF are versioned with the source. A single HTML file contains the browser application and models. GitHub Pages and a hosted backend are outside the selected delivery. Board state stays on-device; undo history is held in memory for the current session.
+The original release delivered a public repository and a downloadable coach for playing with physical cards. The ZIP and printable PDF are versioned with the source. A single HTML file contains the browser application and models. The physical-table coach runs locally after download. Board state stays on-device; undo history is held in memory for the current session.
 
-The AWS allowance is $100 estimated. The runs used the supplied workspace CPU only. Estimated project AWS spend is $0. There are no AWS resources, background jobs or ongoing hosting charges provisioned by this project. No provider credentials are required to reproduce results. Public operation records contain no private deployment inventory.
+The project AWS allowance is $100 estimated. The first two research studies used the supplied workspace CPU with an estimated $0 in additional AWS spend. No provider credentials are required to reproduce results. Public operation records contain no private deployment inventory.
 
 Design follows the Factory's documented warm surfaces, restrained typography and accent treatment. The coach uses a high-contrast green playing surface, tap-sized numbered cards, stable spatial placement and a distinct printable view. Styling and assets are local to the application.
 
@@ -27,6 +27,14 @@ The factory registry uses the public-minimal profile. Restore from the app repos
 The phase-two engine can resume a partial round in a sampled hidden world and continue through the match scoring threshold. The released neural net and tree use the original 18 board-and-action features. The CPU teacher labels their candidate moves using split win credit at match end. A matched control uses the end of the current round on exactly the same simulated trajectories. The [study record](reports/phase2/README.md) covers the independent seed ranges, model selection, paper rule, research-only full-table policies and release decisions.
 
 The coach reads its default paper rule and optional whole-match model from `web/release.json`. `npm run phase2:verify` recomputes the league statistics from compressed shuffle blocks and verifies the shipped choices. Only new board sessions adopt the new family default. Existing valid saved sessions retain the selected strategy. The release includes both printable rules and a printable, anonymous family comparison sheet. All research used the existing workspace CPU. Estimated additional AWS cost was $0.
+
+## Hosted play
+
+The online game puts a human at seat zero and lets them select the engine for each of one to seven opposing seats. The backend deals and scores through the same engine as the research tournaments. It persists a complete private state between moves and sends the browser each player's visible board, the public actions, and the human's current draw. A versioned move can commit only once. The game record keeps the engine lineup, round scores, cumulative standings, and tied winners.
+
+A private recovery key represents an anonymous player. A browser generates it from 32 random bytes and sends it in an authorization header. The database partitions by a hash and never needs the original key. Keeping the key lets the player recover their current game and results after switching browsers or moving to a custom hostname. The game can be hosted under any HTTPS root with the UI and API on the same origin. Custom DNS and a Forge Live link are a future publication step.
+
+The layout uses the original coach's green table surface, with warm paper, rust accents, and straightforward typography adapted from [Forge's style guide](https://github.com/The-CarL/carloperottino-forge/blob/d584183/STYLE_GUIDE.md). At the table, legal card targets and the current round action have priority. GitHub CI runs the server locally against an in-memory store for repeatable browser tests. Runtime storage for the hosted service is durable.
 
 ## Forge publication
 

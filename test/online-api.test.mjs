@@ -336,7 +336,9 @@ test('Dynamo cancels conflicting revisions and retries transient transaction con
   const makeError = (code) =>
     Object.assign(new Error('cancelled'), {
       name: 'TransactionCanceledException',
-      CancellationReasons: [{ Code: code }],
+      ...(code === 'undetailed'
+        ? {}
+        : { CancellationReasons: [{ Code: code }] }),
     })
   const tokens = []
   let code = 'TransactionConflict'
@@ -359,6 +361,8 @@ test('Dynamo cancels conflicting revisions and retries transient transaction con
   assert.equal(tokens.length, 2)
   assert.equal(tokens[0], tokens[1])
   code = 'ConditionalCheckFailed'
+  assert.equal(await db.create('hash', game), false)
+  code = 'undetailed'
   assert.equal(await db.create('hash', game), false)
   assert.throws(() => createDynamoStore({}), /SKYJO_TABLE/)
 })

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f6f3ea" />
+    <title>Skyjo — Strategy Lab</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#app">Skip to table</a>
+    <header class="site-head">
+      <button
+        class="brand"
+        data-action="table"
+        aria-label="Skyjo Strategy Lab home"
+      >
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span><strong>Skyjo</strong><small>Strategy Lab</small></span>
+      </button>
+      <nav aria-label="Main navigation">
+        <button id="nav-table" data-action="table">Table</button>
+        <button id="nav-history" data-action="history">Match history</button>
+      </nav>
+      <button class="key-link" data-action="recovery">
+        <span aria-hidden="true">⚿</span> Recovery key
+      </button>
+    </header>
+    <div id="notice" role="status" aria-live="polite"></div>
+    <main id="app" tabindex="-1" aria-label="Game table">
+      <h1>Set your table<span>.</span></h1>
+      <p>Loading the game…</p>
+    </main>
+    <footer>
+      <span>Skyjo Strategy Lab</span
+      ><button data-action="rules">How to play</button>
+    </footer>
+    <dialog id="dialog"><div id="dialog-content"></div></dialog>
+    <noscript>Enable JavaScript to play Skyjo in your browser.</noscript>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": {"node": ">=24"},
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "check": "tsc --noEmit",
@@ -12,7 +14,17 @@
     "dataset": "node scripts/dataset.mjs",
     "replay": "node scripts/replay.mjs",
     "phase2:reproduce": "bash scripts/phase2.sh",
-    "phase2:verify": "python3 test/study_v2_stats_test.py && python3 scripts/study_v2_report.py --from-published && node scripts/coach-release.mjs --check"
+    "phase2:verify": "python3 test/study_v2_stats_test.py && python3 scripts/study_v2_report.py --from-published && node scripts/coach-release.mjs --check",
+    "online:build": "node scripts/build-online.mjs",
+    "online:package": "npm run online:build && python3 scripts/package-online.py",
+    "online:dev": "npm run online:build && node scripts/dev-online.mjs"
   },
-  "devDependencies": {"typescript": "5.9.3", "esbuild": "0.28.2"}
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "3.1178.0",
+    "@aws-sdk/lib-dynamodb": "3.1178.0"
+  }
 }
