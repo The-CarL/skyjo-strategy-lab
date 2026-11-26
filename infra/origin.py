@@ -9,7 +9,7 @@ import sys
 import time
 
 from online import Deployment, Recovery, URL_RULES, aws, require, timestamp
-from domain import Domain, HOST, signed_config
+from domain import Domain, HOST, MANAGED_STATIC, signed_config
 
 EDGE_RULES = {
     "SkyjoCloudFrontUrl": ("lambda:InvokeFunctionUrl", "FunctionUrlAuthType", "AWS_IAM"),
@@ -167,6 +167,38 @@ class Origin:
         Recovery(self.d).backup()
         print(json.dumps({"cloudfront": result["Status"], "origin": "sigv4", "public_assets_max_ttl": 300}))
 
+    def managed(self):
+        """Switch only the public behavior to the caching policy included in the Free plan."""
+        require(self.dist["details"].get("signed_origin"), "Verify the signed edge first")
+        policy = aws("cloudfront", "get-cache-policy", {"Id": MANAGED_STATIC})["CachePolicy"]["CachePolicyConfig"]
+        params = policy["ParametersInCacheKeyAndForwardedToOrigin"]
+        require(policy["Name"] == "Managed-CachingOptimized" and policy["MinTTL"] == 1 and all(
+            params[k][setting] == "none" for k, setting in (("HeadersConfig", "HeaderBehavior"),
+                ("CookiesConfig", "CookieBehavior"), ("QueryStringsConfig", "QueryStringBehavior"))),
+            "Unexpected public cache policy settings")
+        desired = self.domain.config()
+        expected = deepcopy(desired)
+        expected["DefaultCacheBehavior"]["CachePolicyId"] = MANAGED_STATIC
+        current = self.config()
+        info = current["DistributionConfig"]
+        if info["DefaultCacheBehavior"]["CachePolicyId"] != MANAGED_STATIC:
+            self.domain.distribution_readback(desired)
+            info["DefaultCacheBehavior"]["CachePolicyId"] = MANAGED_STATIC
+            self.d.mutate("cloudfront", "update-distribution", {"Id": self.dist["id"],
+                "IfMatch": current["ETag"], "DistributionConfig": info})
+        for _ in range(20):
+            if self.config()["DistributionConfig"]["DefaultCacheBehavior"]["CachePolicyId"] == MANAGED_STATIC:
+                break
+            time.sleep(2)
+        result = self.domain.distribution_readback(expected)
+        self.dist["details"]["managed_static"] = True
+        self.dist.update(last_run=self.d.run, last_commit=self.d.commit, last_time=timestamp())
+        self.d.mutate("cloudfront", "tag-resource", {"Resource": self.arn, "Tags": {"Items": [
+            {"Key": k, "Value": v} for k,v in self.d.latest.items()]}})
+        self.d.save()
+        Recovery(self.d).backup()
+        print(json.dumps({"cloudfront": result["Status"], "static": "Managed-CachingOptimized", "api_cache_ttl": 0}))
+
     def lock(self):
         self.verify_policy()
         require(self.dist["details"].get("signed_origin"), "Deploy the signed edge first")
@@ -198,7 +230,7 @@ class Origin:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("stage", choices=("prepare", "edge", "lock"))
+    parser.add_argument("stage", choices=("prepare", "edge", "managed", "lock"))
     parser.add_argument("--inventory", type=Path, required=True)
     parser.add_argument("--run-id", required=True)
     args = parser.parse_args()

@@ -18,6 +18,7 @@ ZONE = "carloperottino.com"
 APPROVAL = "Publish skyjo.carloperottino.com over HTTPS for the Skyjo game and family coach"
 CLOUDFRONT_ZONE = "Z2FDTNDATAQYW2"
 CACHE_POLICY = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"  # AWS Managed-CachingDisabled
+MANAGED_STATIC = "658327ea-f89d-4fab-a63d-7e88639e58f6"  # AWS Managed-CachingOptimized
 ORIGIN_POLICY = "b689b0a8-53d0-40ab-baf2-68738e2966ac"  # AWS Managed-AllViewerExceptHostHeader
 METHODS = ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"]
 
@@ -32,7 +33,8 @@ def signed_config(config, resources):
     dynamic["AllowedMethods"] = {"Quantity": 7, "Items": METHODS, "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]}}
     config["CacheBehaviors"] = {"Quantity": 2, "Items": [
         {**dynamic, "PathPattern": path} for path in ("api", "api/*")]}
-    default["CachePolicyId"] = resources["static_cache_policy"]["id"]
+    static_policy = resources.get("distribution", {}).get("details", {}).get("managed_static")
+    default["CachePolicyId"] = MANAGED_STATIC if static_policy else resources["static_cache_policy"]["id"]
     default.pop("OriginRequestPolicyId", None)
     default["AllowedMethods"] = {"Quantity": 2, "Items": ["GET", "HEAD"], "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]}}
     return config
