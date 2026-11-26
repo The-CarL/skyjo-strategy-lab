@@ -145,6 +145,7 @@ nav {
   display: flex;
   gap: 7px;
 }
+nav a,
 nav button,
 .key-link,
 footer button {
@@ -152,10 +153,15 @@ footer button {
   font-size: 13px;
   padding: 9px 12px;
 }
+nav a {
+  text-decoration: none;
+  border-radius: 7px;
+}
 nav button[aria-current='page'] {
   color: #324c3b;
   background: #e5e9d9;
 }
+nav a:hover,
 nav button:hover,
 .key-link:hover,
 footer button:hover,
@@ -436,6 +442,33 @@ h1 > span {
   border-radius: 50%;
   font: bold 13px/18px var(--sans);
 }
+.setup-count {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.setup-count label {
+  font: normal 24px/1.15 var(--serif);
+  letter-spacing: -0.035em;
+}
+.setup-count select {
+  min-height: 42px;
+  padding: 7px 10px;
+  border: 1px solid #9ba891;
+  background: #edf1e3;
+  color: var(--ink);
+  font-weight: 650;
+}
+.lineup-header {
+  margin-top: 15px;
+}
+.lineup-header p {
+  margin-top: 4px;
+  font-size: 13px;
+}
 .opponents {
   margin-top: 16px;
   display: grid;
@@ -534,6 +567,33 @@ details summary {
 .play-layout {
   grid-template-columns: minmax(0, 1.65fr) minmax(250px, 0.68fr);
 }
+.match-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+.match-line .eyebrow {
+  margin: 0;
+}
+.abandon {
+  padding: 7px 9px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  border: 1px solid var(--line);
+}
+.abandon:hover:enabled {
+  border-color: #c09380;
+  color: var(--rust-deep);
+}
+.confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
 .play-masthead {
   margin-bottom: 17px;
 }
@@ -556,6 +616,17 @@ details summary {
   display: flex;
   align-items: center;
   gap: 9px;
+}
+.many-rivals {
+  grid-template-columns: repeat(auto-fit, minmax(min(82px, 100%), 1fr));
+}
+.many-rivals .rival {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.many-rivals .rival-grid {
+  flex: none;
 }
 .rival-info {
   min-width: 0;
@@ -968,6 +1039,7 @@ dialog input {
     width: 100%;
     gap: 4px;
   }
+  nav a,
   nav button {
     padding: 5px 9px;
     font-size: 12px;
@@ -1035,11 +1107,19 @@ dialog input {
     width: 52px;
     flex: 0 0 52px;
   }
+  .many-rivals {
+    grid-template-columns: repeat(auto-fit, minmax(min(94px, 100%), 1fr));
+    row-gap: 9px;
+  }
   .rival-name {
     font-size: 10px;
   }
   .rival-points {
     display: none;
+  }
+  .many-rivals .rival-points {
+    display: block;
+    font-size: 10px;
   }
   .rival-grid .rank {
     font-size: 7px;

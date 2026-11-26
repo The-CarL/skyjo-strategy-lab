@@ -22,6 +22,11 @@ EXPECTED_REPO = "the-carl/skyjo-strategy-lab"
 REGION = "us-east-1"
 POLICY = "SkyjoRuntime"
 CONCURRENCY = 2
+ASSETS = {
+    "/": "public/index.html", "/app.js": "public/app.js", "/style.css": "public/style.css",
+    "/coach": "public/coach/index.html", "/coach/app.js": "public/coach/app.js",
+    "/coach/style.css": "public/coach/style.css",
+}
 CAP = {"MaxReadRequestUnits": 16, "MaxWriteRequestUnits": 32}
 URL_RULES = {
     "SkyjoPublicUrl": ("lambda:InvokeFunctionUrl", "FunctionUrlAuthType", "NONE"),
@@ -226,8 +231,9 @@ class Deployment:
 
     def function(self, package):
         with zipfile.ZipFile(package) as archive:
-            require({"index.mjs", "public/index.html", "public/app.js", "public/style.css"} <= set(archive.namelist()),
-                    "Incomplete online ZIP")
+            require(sorted(archive.namelist()) == sorted(["index.mjs", *ASSETS.values()]),
+                    "Unexpected online ZIP manifest")
+            asset_hashes = {url: hashlib.sha256(archive.read(name)).digest() for url, name in ASSETS.items()}
         content = package.read_bytes()
         digest = base64.b64encode(hashlib.sha256(content).digest()).decode()
         code = base64.b64encode(content).decode()
@@ -255,8 +261,9 @@ class Deployment:
             self.remember("concurrency", str(CONCURRENCY), "AWS::Lambda::ReservedConcurrency", "function")
         self.state["zip_sha256"] = hashlib.sha256(content).hexdigest()
         self.save()
+        return asset_hashes
 
-    def probe(self, path, expected):
+    def probe(self, path):
         # The history read also exercises the bounded Lambda execution role against DynamoDB.
         event = {"version": "2.0", "rawPath": path, "requestContext": {"http": {"method": "GET"}},
                  "headers": {"authorization": "Bearer " + secrets.token_urlsafe(32)}}
@@ -271,7 +278,8 @@ class Deployment:
             response = json.loads(process.stdout)
             require("FunctionError" not in response, "Lambda handler failed private invocation")
             actual = json.loads(output.read_text())
-            require(actual["statusCode"] == 200 and expected in actual["body"], f"Private probe failed on {path}")
+            require(actual["statusCode"] == 200, f"Private probe failed on {path}")
+            return actual
 
     def publish(self):
         for sid, (action, key, value) in URL_RULES.items():
@@ -297,7 +305,7 @@ class Deployment:
         require(aws("lambda", "get-function-concurrency", {"FunctionName": self.name})
                 .get("ReservedConcurrentExecutions") == CONCURRENCY, "Concurrency readback failed")
         self.state["last_readback"] = {"run": self.run, "source": self.commit, "time": timestamp(),
-                                      "private_checks": ["assets", "engines", "history"], "capacity": CAP,
+                                      "private_checks": ["assets", "coach", "engines", "history"], "capacity": CAP,
                                       "concurrency": CONCURRENCY}
         self.save()
         Recovery(self).backup()
@@ -419,9 +427,15 @@ def main():
     try:
         deploy.role()
         deploy.table_and_logs()
-        deploy.function(args.package)
-        for path, expected in [("/", "<html"), ("/api/engines", '"engines"'), ("/api/history", '"items"')]:
-            deploy.probe(path, expected)
+        for path, digest in deploy.function(args.package).items():
+            actual = deploy.probe(path)
+            require(hashlib.sha256(actual["body"].encode()).digest() == digest, f"Served asset differs on {path}")
+            if path in ("/", "/coach"):
+                directives = actual["headers"].get("content-security-policy", "").split(";")
+                require(any(rule.split() == ["script-src", "'self'"] for rule in directives),
+                        f"Unexpected script policy on {path}")
+        require(json.loads(deploy.probe("/api/engines")["body"])["engines"], "Empty engine catalog")
+        require(json.loads(deploy.probe("/api/history")["body"])["items"] == [], "New profile history mismatch")
         deploy.publish()
     except Exception as error:
         deploy.entry(state="stopped", error=str(error))

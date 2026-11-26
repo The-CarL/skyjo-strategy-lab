@@ -1,6 +1,6 @@
 # Hosted Skyjo
 
-The HTTPS Lambda function URL serves the browser and API from one origin in us-east-1. The Node.js 22 arm64 function runs with 256 MiB, an eight-second timeout and two concurrent executions. Its execution role can read and write game records in one DynamoDB table and write warning/error logs to one group with seven-day retention. Every game and history request uses the browser's private profile key. The public invocation grants apply only to the function URL.
+The HTTPS Lambda function URL serves the online table at `/`, the family coach at `/coach` and the API from one origin in us-east-1. The Node.js 22 arm64 function runs with 256 MiB, an eight-second timeout and two concurrent executions. Its execution role can read and write game records in one DynamoDB table and write warning/error logs to one group with seven-day retention. Every game and history request uses the browser's private profile key. The public invocation grants apply only to the function URL.
 
 The table uses on-demand billing, a string partition key `pk`, a string sort key `sk`, deletion protection and configured maxima of 16 read units and 32 write units per second. DynamoDB can temporarily exceed these targets through burst capacity. The account's normal encryption at rest applies.
 
@@ -21,7 +21,7 @@ factory-aws --exec --record "$SKYJO_OPS/$run_id.jsonl" \
   --run-id "$run_id" --inventory "$SKYJO_OPS/inventory.json"
 ```
 
-The release output contains the public HTTPS URL and the deployed ZIP digest. The inventory keeps the exact resource IDs, creation attribution and private readback. Its companion events file records operation intents and outcomes. Preserve both files. A creation with an uncertain provider response requires reconciling that exact ID and its documented creation event before continuing. Existing named resources require matching inventory and provider provenance.
+The release verifies the deployed ZIP digest and compares each of the six served table and coach assets with its packaged bytes. It also checks both pages’ same-origin script policy, the engine catalog and an authenticated private history read. The release output contains the public HTTPS URL and the deployed ZIP digest. The inventory keeps the exact resource IDs, creation attribution and private readback. Its companion events file records operation intents and outcomes. Preserve both files. A creation with an uncertain provider response requires reconciling that exact ID and its documented creation event before continuing. Existing named resources require matching inventory and provider provenance.
 
 ## Recover private deployment records
 

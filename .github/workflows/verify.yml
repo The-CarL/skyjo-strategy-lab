@@ -43,3 +43,4 @@ jobs:
             sleep 1
           done
           CHROMIUM_PATH="$(command -v google-chrome)" python test/online_smoke.py
+          CHROMIUM_PATH="$(command -v google-chrome)" python test/online_features_smoke.py

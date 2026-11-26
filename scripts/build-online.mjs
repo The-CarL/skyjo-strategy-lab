@@ -1,9 +1,11 @@
 import { build } from 'esbuild'
+import { buildCoach } from './build.mjs'
 import { copyFile, mkdir } from 'node:fs/promises'
 
 const out = 'online-dist/lambda'
 await mkdir(out + '/public', { recursive: true })
 await Promise.all([
+  buildCoach(out + '/public/coach', { hosted: true }),
   build({
     entryPoints: ['online/app.ts'], outfile: out + '/public/app.js',
     bundle: true, minify: true, target: 'es2020', format: 'esm', platform: 'browser',

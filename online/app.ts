@@ -106,7 +106,9 @@ try {
     saved?.key === key &&
     typeof saved.request?.body?.requestId === 'string' &&
     typeof saved.request?.path === 'string' &&
-    /^\/api\/games(?:\/[a-zA-Z0-9_-]+\/moves)?$/.test(saved.request.path)
+    /^\/api\/games(?:\/[a-zA-Z0-9_-]+\/(?:moves|abandon))?$/.test(
+      saved.request.path,
+    )
   )
     pending = saved.request
 } catch {
@@ -317,8 +319,13 @@ function boardGrid(
 }
 function setNotice() {
   const box = document.querySelector('#notice')!
+  const abandoning = pending?.path.endsWith('/abandon')
   const msg =
     notice ||
+    (pending && !busy && !loading
+      ? 'A saved request is waiting for confirmation.'
+      : '') ||
+    (bootFailed ? 'Reconnect to load your latest table.' : '') ||
     (!persistent
       ? 'Browser storage is unavailable. Copy your recovery key to keep access after closing this page.'
       : '')
@@ -326,7 +333,7 @@ function setNotice() {
     ? '<div class="notice-box">' +
       html(msg) +
       (pending && !busy
-        ? btn('retry', 'Retry saved move', '')
+        ? btn('retry', abandoning ? 'Retry abandon' : 'Retry saved move', '')
         : bootFailed && !loading
           ? btn('reload', 'Retry connection', '')
           : '') +
@@ -347,6 +354,19 @@ function setup() {
           '</option>',
       )
       .join('')
+  const playerCount = selected.length + 1
+  const countOptions = Array.from({ length: 7 }, (_, i) => {
+    const total = i + 2
+    return (
+      '<option value="' +
+      total +
+      '"' +
+      (total === playerCount ? ' selected' : '') +
+      '>' +
+      total +
+      ' players</option>'
+    )
+  }).join('')
   const opponents = selected
     .map((id, i) => {
       const engine = engines.find((e) => e.id === id)
@@ -382,7 +402,7 @@ function setup() {
   return (
     heading(
       'Set your table',
-      'Choose your opponents and play a full match to 100 points.',
+      'Play a full match to 100 points with 2–8 players.',
     ) +
     '<div class="two-col setup-layout"><section class="tabletop preview" aria-label="Table preview"><div class="row-between"><h2 class="board-title">Table preview</h2><span class="board-meta">Four columns of three</span></div>' +
     boardGrid(
@@ -390,9 +410,13 @@ function setup() {
       'preview',
     ) +
     '<p class="preview-note">Three matching cards in a column clear together.</p></section>' +
-    '<section class="panel setup-panel"><div class="panel-head"><h2>Opponents</h2><span class="count">' +
-    (selected.length + 1) +
-    ' seats</span></div><div class="opponents">' +
+    '<section class="panel setup-panel"><div class="setup-count"><label for="player-count">Total players</label>' +
+    '<select id="player-count"' +
+    disabled(busy || loading || !!pending || bootFailed || !engines.length) +
+    '>' +
+    countOptions +
+    '</select></div>' +
+    '<div class="lineup-header"><h2>Opponents</h2><p>You play seat 1. Choose a playing style for each other seat. Styles can repeat.</p></div><div class="opponents">' +
     (opponents ||
       (loading
         ? '<p class="subtle">Loading strategy engines…</p>'
@@ -408,7 +432,12 @@ function setup() {
       'start',
       busy ? 'Starting game…' : 'Start game',
       'primary wide',
-      loading || busy || !!pending || !selected.length || !engines.length,
+      loading ||
+        bootFailed ||
+        busy ||
+        !!pending ||
+        !selected.length ||
+        !engines.length,
     ) +
     '<details class="match-info"><summary>How this match works</summary><p>You play against 1–7 strategy engines. Everyone starts with 12 hidden cards. The lowest total wins when someone reaches 100.</p></details></section></div>'
   )
@@ -666,15 +695,26 @@ function live(g: Game) {
               : '')
           : ''
   return (
-    heading(
-      copy[0],
-      copy[1],
-      'Round ' + g.round + ' · ' + g.players.length + ' players',
-      'play-masthead',
-    ) +
+    '<div class="match-line"><span class="eyebrow">Round ' +
+    g.round +
+    ' · ' +
+    g.players.length +
+    ' players</span>' +
+    (page === 'table' && g.phase !== 'gameOver'
+      ? btn(
+          'abandon',
+          'Abandon game',
+          'abandon',
+          busy || !!pending || bootFailed,
+        )
+      : '') +
+    '</div>' +
+    heading(copy[0], copy[1], '', 'play-masthead') +
     (page === 'detail' ? btn('history', 'Back to history', 'quiet') : '') +
     (end ? breakdown(g) : '') +
-    '<div class="two-col play-layout"><section class="tabletop" aria-label="Playing table"><div class="rivals">' +
+    '<div class="two-col play-layout"><section class="tabletop" aria-label="Playing table"><div class="rivals' +
+    (g.players.length > 3 ? ' many-rivals' : '') +
+    '">' +
     rivals +
     '</div>' +
     (sources
@@ -797,14 +837,32 @@ function clearChoices() {
   openSlots = []
   mode = 'none'
 }
-function acceptGame(next: Game) {
+function loadPosition(next: Game | null) {
   game = next
+  if (next)
+    selected = next.players.flatMap((p) => (p.engineId ? [p.engineId] : []))
+  clearChoices()
+  if (next?.phase === 'held') mode = 'swap'
+}
+function focusTable() {
+  app.focus({ preventScroll: true })
+  window.scrollTo(0, 0)
+}
+function acceptGame(next: Game | null) {
+  if (
+    page !== 'table' ||
+    next?.id !== game?.id ||
+    next?.round !== game?.round ||
+    (next?.phase !== game?.phase &&
+      (next?.phase === 'roundOver' || next?.phase === 'gameOver'))
+  ) {
+    focusTable()
+  }
+  loadPosition(next)
   detail = null
   settingUp = false
   page = 'table'
-  clearChoices()
-  if (next.phase === 'held') mode = 'swap'
-  if (next.phase === 'gameOver') {
+  if (next?.phase === 'gameOver') {
     historyLoaded = false
     historyEpoch++
   }
@@ -828,13 +886,10 @@ async function bootstrap() {
     engines = catalog.engines
     selected = selected.filter((id) => engines.some((e) => e.id === id))
     if (!selected.length && engines.length) selected = [engines[0].id]
-    if (current.game) {
-      game = current.game
-      clearChoices()
-      if (game.phase === 'held') mode = 'swap'
-    } else game = null
+    loadPosition(current.game)
     if (pending)
-      notice = 'A saved move is waiting for confirmation. Retry it to continue.'
+      notice =
+        'A saved request is waiting for confirmation. Retry it to continue.'
   } catch (e) {
     if (epoch === tableEpoch && token === key) {
       bootFailed = true
@@ -856,32 +911,46 @@ async function submit(request: Pending) {
   notice = ''
   render()
   try {
-    const res = await api<{ game: Game }>(request.path, {
+    const res = await api<{ game: Game | null }>(request.path, {
       token,
       body: request.body,
     })
     if (token !== key) return
+    if (request.path.endsWith('/abandon')) {
+      const current = await api<{ game: Game | null }>('/api/games/current', {
+        token,
+      })
+      acceptGame(current.game)
+      notice = current.game
+        ? 'Game abandoned. Another game is already on this profile.'
+        : 'Game abandoned. Choose your next table.'
+    } else {
+      if (!res.game)
+        throw new Error('The game service did not confirm your move.')
+      acceptGame(res.game)
+    }
+    bootFailed = !engines.length
     pendingSet(null)
-    acceptGame(res.game)
   } catch (e) {
     if (token !== key) return
-    if (e instanceof ApiError && e.status === 409) {
+    if (e instanceof ApiError && [404, 409, 410].includes(e.status)) {
       pendingSet(null)
-      const id = request.path.match(/^\/api\/games\/([^/]+)\/moves$/)?.[1]
-      if (id) {
-        try {
-          const res = await api<{ game: Game }>(
-            '/api/games/' + encodeURIComponent(id),
-            { token },
-          )
-          acceptGame(res.game)
-          notice =
-            'This game changed in another tab. The latest position is shown.'
-        } catch (readError) {
-          bootFailed = true
-          notice = message(readError)
-        }
-      } else notice = message(e)
+      try {
+        const path =
+          e.code === 'revision_conflict' && request.path.endsWith('/moves')
+            ? request.path.slice(0, -'/moves'.length)
+            : '/api/games/current'
+        const current = await api<{ game: Game | null }>(path, { token })
+        acceptGame(current.game)
+        bootFailed = false
+        notice = current.game
+          ? 'This table changed on another device. The latest game is shown.'
+          : 'This game is no longer active. Choose your next table.'
+      } catch (readError) {
+        bootFailed = true
+        acceptGame(null)
+        notice = message(readError)
+      }
     } else if (
       e instanceof ApiError &&
       e.status >= 400 &&
@@ -909,7 +978,8 @@ function start() {
     busy ||
     pending ||
     loading ||
-    (!settingUp && game && game.phase !== 'gameOver')
+    bootFailed ||
+    (game && game.phase !== 'gameOver')
   )
     return
   void submit({
@@ -936,6 +1006,7 @@ async function showHistory(append = false) {
   if (busy || (!append && page === 'history' && loadingHistory)) return
   const token = key,
     epoch = ++historyEpoch
+  if (!append) focusTable()
   page = 'history'
   detail = null
   notice = ''
@@ -981,6 +1052,7 @@ async function showDetail(id: string) {
     if (token !== key || epoch !== historyEpoch) return
     detail = res.game
     page = 'detail'
+    focusTable()
   } catch (e) {
     if (epoch === historyEpoch) notice = message(e)
   } finally {
@@ -1009,6 +1081,20 @@ function recovery() {
       '<form class="restore-form" id="restore-form"><label class="field-label" for="restore-key">Recovery key to restore</label><input id="restore-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" required><p>Restoring switches this browser to that profile. Copy your current key first to keep access to this table.</p><button class="primary" type="submit">Restore key</button></form><div class="dialog-feedback" id="dialog-feedback" role="status" aria-live="polite"></div>',
     'Recovery key',
   )
+}
+function confirmAbandon() {
+  if (!game || game.phase === 'gameOver' || busy || pending) return
+  openDialog(
+    '<p>This ends your unfinished game and returns you to table setup. Its rounds and scores will be left out of match history.</p>' +
+      '<div class="confirm-actions">' +
+      btn('close', 'Keep playing', 'secondary') +
+      btn('confirm-abandon', 'Abandon and set up a new game', 'primary') +
+      '</div>',
+    'Abandon this game?',
+  )
+  dialog
+    .querySelector<HTMLButtonElement>('.confirm-actions [data-action="close"]')
+    ?.focus()
 }
 function rules() {
   openDialog(
@@ -1066,12 +1152,7 @@ async function restoreKey() {
     historyRows = []
     historyLoaded = false
     cursor = null
-    game = res.game
-    settingUp = false
-    page = 'table'
-    detail = null
-    clearChoices()
-    if (game?.phase === 'held') mode = 'swap'
+    acceptGame(res.game)
     loading = false
     bootFailed = false
     notice = 'Recovery key restored.'
@@ -1118,11 +1199,12 @@ function onAction(action: string, el: HTMLElement) {
     return
   }
   if (action === 'table') {
+    focusTable()
     historyEpoch++
     loadingHistory = false
     page = 'table'
     detail = null
-    notice = pending ? 'A saved move is waiting for confirmation.' : ''
+    notice = ''
     render()
     return
   }
@@ -1135,6 +1217,7 @@ function onAction(action: string, el: HTMLElement) {
     return
   }
   if (action === 'new' && (game?.phase === 'gameOver' || !game)) {
+    focusTable()
     historyEpoch++
     detail = null
     page = 'table'
@@ -1145,10 +1228,7 @@ function onAction(action: string, el: HTMLElement) {
   }
   if (pending) return
   if (action === 'add' && selected.length < 7 && engines.length) {
-    selected.push(
-      (engines.find((e) => !selected.includes(e.id)) ?? engines[0]).id,
-    )
-    render()
+    setPlayerCount(selected.length + 2)
     document
       .querySelector<HTMLSelectElement>('#op-' + (selected.length - 1))
       ?.focus()
@@ -1158,7 +1238,23 @@ function onAction(action: string, el: HTMLElement) {
     start()
     return
   }
-  if (!game || page !== 'table' || settingUp) return
+  if (!game || page !== 'table' || settingUp || bootFailed) return
+  if (action === 'abandon' && game.phase !== 'gameOver') {
+    confirmAbandon()
+    return
+  }
+  if (
+    action === 'confirm-abandon' &&
+    game.phase !== 'gameOver' &&
+    dialog.open
+  ) {
+    dialog.close()
+    void submit({
+      path: '/api/games/' + encodeURIComponent(game.id) + '/abandon',
+      body: { requestId: uuid(), expectedRevision: game.revision },
+    })
+    return
+  }
   if (action === 'open' && game.phase === 'opening' && openSlots.length === 2) {
     move({ kind: 'open', slots: [openSlots[0], openSlots[1]] })
     return
@@ -1213,8 +1309,29 @@ document.addEventListener('click', (e) => {
   }
   if (el.dataset.action) onAction(el.dataset.action, el)
 })
+function setPlayerCount(total: number) {
+  if (!Number.isInteger(total) || total < 2 || total > 8 || !engines.length)
+    return
+  selected = selected.slice(0, total - 1)
+  while (selected.length < total - 1) {
+    const next =
+      engines.find((engine) => !selected.includes(engine.id)) ?? engines[0]
+    selected.push(next.id)
+  }
+  render()
+}
 document.addEventListener('change', (e) => {
   const el = e.target
+  if (
+    el instanceof HTMLSelectElement &&
+    el.id === 'player-count' &&
+    !busy &&
+    !pending
+  ) {
+    setPlayerCount(Number(el.value))
+    document.querySelector<HTMLSelectElement>('#player-count')?.focus()
+    return
+  }
   if (
     el instanceof HTMLSelectElement &&
     el.dataset.opponent !== undefined &&

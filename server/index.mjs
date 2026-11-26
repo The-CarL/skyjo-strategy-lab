@@ -7,6 +7,10 @@ const files = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
+  ['/coach', ['coach/index.html', 'text/html; charset=utf-8']],
+  ['/coach/', ['coach/index.html', 'text/html; charset=utf-8']],
+  ['/coach/app.js', ['coach/app.js', 'text/javascript; charset=utf-8']],
+  ['/coach/style.css', ['coach/style.css', 'text/css; charset=utf-8']],
 ])
 const cachedAssets = new Map()
 const headers = {
