@@ -329,7 +329,9 @@ class Traffic:
         details = self.resources["distribution"]["details"]
         previous = details.get("unenrolled_acl_cleanup", {})
         arn = self.resources.get("traffic_acl", {}).get("id", previous.get("arn"))
-        require(arn and (not previous or previous["arn"] == arn), "No unambiguous trial ACL to roll back")
+        require(arn, "No recorded trial ACL to roll back")
+        if previous.get("arn") != arn:
+            previous = {}
         try:
             acl = aws("wafv2", "get-web-acl", {**self.query, "Id": arn.split("/")[-1]})["WebACL"]
         except RuntimeError as exc:
