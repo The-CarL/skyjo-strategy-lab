@@ -3,6 +3,8 @@ import type { Action, Board, Policy, View } from '../src/engine.ts'
 import { incoming, positional, threshold } from '../src/policies.ts'
 import { learned } from '../src/model.ts'
 import type { Bundle } from '../src/model.ts'
+import { strategyGuide } from '../src/strategy-guide.ts'
+import type { StrategyDetails } from '../src/strategy-guide.ts'
 import models from '../models/policies.json' with { type: 'json' }
 
 import { familyPolicy } from '../src/family.ts'
@@ -11,26 +13,22 @@ import matchModel from '../models/match-s11.json' with { type: 'json' }
 declare const __VALUE_UPGRADE__: boolean
 declare const __MATCH_MODEL__: boolean
 
-const modes = new Map<string, { label: string; policy: Policy }>()
-function add(id: string, label: string, policy: Policy) {
-  modes.set(id, { label, policy })
+const modes = new Map<
+  string,
+  { label: string; policy: Policy; guide: StrategyDetails }
+>()
+function add(policy: Policy, guideId = policy.name) {
+  const guide = strategyGuide[guideId]
+  if (!guide?.coachMode || !guide.coachLabel)
+    throw Error('Missing coach strategy: ' + guideId)
+  modes.set(guide.coachMode, { label: guide.coachLabel, policy, guide })
 }
-if (__VALUE_UPGRADE__)
-  add(
-    'value',
-    'Family rule · clear or trade',
-    familyPolicy('family-value-upgrade')!,
-  )
-add('family', 'Family rule · clear, then 3', threshold(3, true))
-if (__MATCH_MODEL__)
-  add(
-    'match',
-    'Full-match neural network',
-    learned(matchModel as Bundle, 'mlp'),
-  )
-add('board', 'Board evaluator', positional('board'))
-add('tree', 'Round-trained decision tree', learned(models as Bundle, 'tree'))
-add('mlp', 'Round-trained neural network', learned(models as Bundle, 'mlp'))
+if (__VALUE_UPGRADE__) add(familyPolicy('family-value-upgrade')!)
+add(threshold(3, true))
+if (__MATCH_MODEL__) add(learned(matchModel as Bundle, 'mlp'), 'match-mlp-11')
+add(positional('board'))
+add(learned(models as Bundle, 'tree'))
+add(learned(models as Bundle, 'mlp'))
 interface State {
   board: Board
   discard: number | null
@@ -90,6 +88,16 @@ const button = (id: string) => el<HTMLButtonElement>(id)
 const dialog = el<HTMLDialogElement>('picker')
 for (const [id, mode] of modes) {
   el<HTMLSelectElement>('policy').add(new Option(mode.label, id))
+  const title = document.createElement('dt')
+  title.dataset.mode = id
+  title.textContent = mode.label
+  const details = document.createElement('dd')
+  const decision = document.createElement('p')
+  decision.textContent = mode.guide.decision
+  const example = document.createElement('p')
+  example.textContent = mode.guide.example
+  details.append(decision, example)
+  el('coach-strategy-list').append(title, details)
 }
 let current: Action | null = null
 const spot = (slot: number) =>
@@ -243,9 +251,10 @@ function render() {
     hidden = b.filter((x) => x === null).length
   const revealed = b.filter((x) => x !== null && x !== GONE)
   const ready = hidden <= 10
+  const mode = modes.get(s.mode)!
   current =
     ready && hidden > 0 && (s.discard !== null || s.held !== null)
-      ? modes.get(s.mode)!.policy.choose(v, Math.random)
+      ? mode.policy.choose(v, Math.random)
       : null
   el('grid').querySelectorAll<HTMLButtonElement>('.slot').forEach((cell) => {
     const i = Number(cell.dataset.slot),
@@ -278,6 +287,7 @@ function render() {
   el('points').textContent =
     'Visible points · ' + revealed.reduce<number>((a, x) => a + x!, 0)
   el<HTMLSelectElement>('policy').value = s.mode
+  el('policy-description').textContent = mode.guide.description
   el('discard-value').textContent = String(s.discard ?? '+')
   el('drawn-value').textContent = String(s.held ?? '+')
   const holding = s.held !== null

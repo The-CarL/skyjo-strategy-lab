@@ -340,6 +340,19 @@ function setNotice() {
       '</div>'
     : ''
 }
+function guideButton(engine?: EngineInfo, showName = false) {
+  if (!engine)
+    return (
+      '<button class="guide-link" data-action="strategies" aria-haspopup="dialog"' +
+      disabled(!engines.length) +
+      '>Strategy guide</button>'
+    )
+
+  const name = html(engine.name)
+  const label = showName ? 'Read about ' + name : 'How it plays (' + name + ')'
+  return `<button class="guide-link" data-action="strategies" data-engine-id="${html(engine.id)}"
+    aria-haspopup="dialog" aria-label="${label}">${showName ? name : 'How it plays'}</button>`
+}
 function setup() {
   const options = (id: string) =>
     engines
@@ -371,11 +384,13 @@ function setup() {
     .map((id, i) => {
       const engine = engines.find((e) => e.id === id)
       return (
-        '<div class="opponent"><label for="op-' +
+        '<div class="opponent"><div class="panel-head"><label for="op-' +
         i +
         '">Opponent ' +
         (i + 1) +
-        '</label><div class="select-line"><select id="op-' +
+        '</label>' +
+        (engine ? guideButton(engine) : '') +
+        '</div><div class="select-line"><select id="op-' +
         i +
         '" data-opponent="' +
         i +
@@ -416,7 +431,9 @@ function setup() {
     '>' +
     countOptions +
     '</select></div>' +
-    '<div class="lineup-header"><h2>Opponents</h2><p>You play seat 1. Choose a playing style for each other seat. Styles can repeat.</p></div><div class="opponents">' +
+    '<div class="lineup-header"><div class="panel-head"><h2>Opponents</h2>' +
+    guideButton() +
+    '</div><p>You play seat 1. Choose a playing style for each other seat. Styles can repeat.</p></div><div class="opponents">' +
     (opponents ||
       (loading
         ? '<p class="subtle">Loading strategy engines…</p>'
@@ -563,18 +580,21 @@ function scoreboard(g: Game) {
   return (
     '<aside class="side"><section class="panel" id="scores"><div class="panel-head"><h2>Scoreboard</h2><span class="count">To 100</span></div><ol class="score-list">' +
     g.players
-      .map(
-        (p) =>
+      .map((p) => {
+        const engine = engines.find((e) => e.id === p.engineId)
+        return (
           '<li class="score-row"><span class="score-name">' +
-          html(playerLabel(p)) +
+          (engine ? guideButton(engine, true) : html(playerLabel(p))) +
           '<small>Seat ' +
           (p.seat + 1) +
           '</small></span><span class="score">' +
           p.total +
-          '</span></li>',
-      )
+          '</span></li>'
+        )
+      })
       .join('') +
     '</ol>' +
+    guideButton() +
     totalsTable(g) +
     '</section>' +
     (g.recent.length
@@ -1079,6 +1099,36 @@ function openDialog(body: string, title: string) {
   dialog.setAttribute('aria-labelledby', 'dialog-title')
   dialog.showModal()
 }
+function strategyGuide(id?: string) {
+  const field = (label: string, value: string | null) =>
+    value ? '<dt>' + label + '</dt><dd>' + html(value) + '</dd>' : ''
+  const groups = new Map<string, EngineInfo[]>()
+  for (const engine of engines) {
+    const family = engine.family || 'Playing styles'
+    if (!groups.has(family)) groups.set(family, [])
+    groups.get(family)!.push(engine)
+  }
+  const sections = Array.from(groups, ([family, members]) => {
+    const entries = members.map((engine) => {
+      const facts =
+        field('Uses', engine.uses) +
+        field('How it plays', engine.decision) +
+        field('Example', engine.example) +
+        field('Table coach', engine.coachLabel)
+      return `<details data-engine-id="${html(engine.id)}"${engine.id === id ? ' open' : ''}>
+        <summary>${html(engine.name)}</summary>
+        <div class="strategy-copy"><p>${html(engine.description)}</p><dl>${facts}</dl></div>
+      </details>`
+    }).join('')
+    return `<section class="strategy-group"><h3>${html(family)}</h3>${entries}</section>`
+  }).join('')
+  openDialog('<div id="strategy-guide">' + sections + '</div>', 'Strategy guide')
+  const summary = dialog.querySelector<HTMLElement>('details[open] > summary')
+  if (summary) {
+    summary.focus({ preventScroll: true })
+    summary.scrollIntoView({ block: 'start' })
+  }
+}
 function recovery() {
   openDialog(
     '<p>This private key opens your table and match history on another device. Keep a copy somewhere safe.</p><div class="key-fields"><label class="field-label" for="own-key">Your recovery key</label><input id="own-key" readonly type="password" value="' +
@@ -1178,6 +1228,10 @@ async function restoreKey() {
 function onAction(action: string, el: HTMLElement) {
   if (action === 'recovery') {
     if (!busy) recovery()
+    return
+  }
+  if (action === 'strategies') {
+    if (engines.length) strategyGuide(el.dataset.engineId)
     return
   }
   if (action === 'rules') {

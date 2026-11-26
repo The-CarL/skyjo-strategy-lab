@@ -7,6 +7,8 @@ import json
 from urllib.parse import urljoin
 from playwright.sync_api import sync_playwright
 
+from online_features_smoke import check_coach_guide
+
 html = Path("dist/skyjo-coach.html").resolve()
 release = json.loads(Path("web/release.json").read_text())
 url = html.as_uri()
@@ -55,6 +57,7 @@ with sync_playwright() as p:
     assert page.locator("#advice").inner_text() == "Draw blind"
     choose("#apply",10)
     assert page.locator("#advice").inner_text() == "Discard 10 and flip"
+    check_coach_guide(page)
     choose("#apply",-2)
     assert "-2" in page.locator("#grid").inner_text()
     context.set_offline(False)

@@ -4,7 +4,7 @@ A reproducible Skyjo simulator for benchmarking human heuristics, card-counting 
 
 **[Play Skyjo online](https://skyjo.carloperottino.com/)** against up to seven computer opponents. The server saves each move and records completed matches in your private history.
 
-**[Coach a physical game on your phone](https://skyjo.carloperottino.com/coach).** Tap the two cards you revealed in real life, then enter the top discard or the card you actually drew. The coach recommends a move and highlights the slot. Tap any slot to update your board, apply the move you played, or undo a change. The coach saves this board on your device and needs only your own cards. The downloadable family kit includes the same coach and two printable strategy cards. [Download the offline kit](https://github.com/The-CarL/skyjo-strategy-lab/raw/refs/heads/main/downloads/skyjo-family-kit.zip)
+**[Coach a physical game on your phone](https://skyjo.carloperottino.com/coach).** Tap the two cards you revealed in real life, then enter the top discard or the card you actually drew. The coach recommends a move and highlights the slot. Tap any slot to update your board, apply the move you played, or undo a change. The coach saves this board on your device and needs only your own cards. The strategy selector explains each of the six coach modes. The downloadable family kit includes the same coach and two printable strategy cards. [Download the offline kit](https://github.com/The-CarL/skyjo-strategy-lab/raw/refs/heads/main/downloads/skyjo-family-kit.zip)
 
 **Original benchmark.** The [tournament report](reports/README.md) covers 57,128 complete games and includes the full head-to-head matrix. In the final four-player test, taking an immediate clear and otherwise keeping 3 or lower earned 35.1% of wins. The original keep-5 policy earned 14.1%. The comparison used the same opponents, deals, and seat rotations. These rates apply to that opponent mix.
 
@@ -12,7 +12,7 @@ A reproducible Skyjo simulator for benchmarking human heuristics, card-counting 
 
 ## Play a match online
 
-Select 2–8 total players, including yourself, then choose a strategy for each computer opponent. You can mix styles or use the same one in multiple seats. You play one board, from your two opening reveals through the final scoring round. Drawing from the stock lets you exchange the drawn card or discard it and flip a hidden card. Taking the visible discard requires an exchange. Rounds continue until a player reaches 100 total points. The lowest total wins.
+Select 2–8 total players, including yourself, then choose a strategy for each computer opponent. You can mix styles or use the same one in multiple seats. Open **Strategy guide** during setup or from the scoreboard to see what each opponent can observe, how it chooses a move, and a worked example. You play one board, from your two opening reveals through the final scoring round. Drawing from the stock lets you exchange the drawn card or discard it and flip a hidden card. Taking the visible discard requires an exchange. Rounds continue until a player reaches 100 total points. The lowest total wins.
 
 The online game saves your progress and results on the server. Return with the same browser to resume. To throw away an unfinished game, choose **Abandon game** and confirm. You can start a fresh table right away. Only completed games enter Match history. Keep a private copy of your recovery key to access the same matches on another browser. Anyone who has that key can access and play your matches.
 
