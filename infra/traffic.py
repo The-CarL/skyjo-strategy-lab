@@ -326,21 +326,52 @@ class Traffic:
         # Only the ACL created by this transaction may be removed, and only when it never enrolled.
         require(self.member() is None and not self.d.has("traffic_plan"),
                 "An existing or pending subscription requires reconciliation before rollback")
-        acl = self.acl()["WebACL"]
+        details = self.resources["distribution"]["details"]
+        previous = details.get("unenrolled_acl_cleanup", {})
+        arn = self.resources.get("traffic_acl", {}).get("id", previous.get("arn"))
+        require(arn and (not previous or previous["arn"] == arn), "No unambiguous trial ACL to roll back")
+        try:
+            acl = aws("wafv2", "get-web-acl", {**self.query, "Id": arn.split("/")[-1]})["WebACL"]
+        except RuntimeError as exc:
+            if "WAFNonexistentItemException" not in str(exc) or not previous:
+                raise
+            acl = None
+        if acl:
+            require(self.acl()["WebACL"]["ARN"] == arn, "Unexpected ACL ownership")
         current = self.current()
         attached = current["DistributionConfig"].get("WebACLId", "")
-        require(attached in ("", acl["ARN"]), "Unexpected associated ACL")
+        require(attached in ("", arn), "Unexpected associated ACL")
         if attached:
             current["DistributionConfig"]["WebACLId"] = ""
             self.d.mutate("cloudfront", "update-distribution", {"Id": self.dist, "IfMatch": current["ETag"],
                           "DistributionConfig": current["DistributionConfig"]})
         live = aws("cloudfront", "get-distribution", {"Id": self.dist})["Distribution"]
-        require(live["Status"] == "Deployed" and not live["DistributionConfig"].get("WebACLId"),
+        config = live["DistributionConfig"]
+        require(live["Status"] == "Deployed" and not config.get("WebACLId"),
                 "Wait for the ACL detachment before completing rollback")
-        self.d.mutate("wafv2", "delete-web-acl", {**self.query, "Id": acl["Id"], "LockToken": self.acl()["LockToken"]})
-        del self.resources["traffic_acl"]
+        behaviors = [config["DefaultCacheBehavior"], *config["CacheBehaviors"].get("Items", [])]
+        responder = f"arn:aws:cloudfront::{self.d.account}:function/{self.response_name}"
+        require(not any(row["FunctionARN"] == responder for behavior in behaviors
+                    for row in behavior.get("FunctionAssociations", {}).get("Items", [])), "A rate responder is still attached")
+        if acl:
+            details["unenrolled_acl_cleanup"] = {"arn": arn, "status": "deleting"}
+            self.d.save()
+            self.d.mutate("wafv2", "delete-web-acl", {**self.query, "Id": acl["Id"], "LockToken": self.acl()["LockToken"]})
+        try:
+            aws("wafv2", "get-web-acl", {**self.query, "Id": arn.split("/")[-1]})
+        except RuntimeError as exc:
+            if "WAFNonexistentItemException" not in str(exc):
+                raise
+        else:
+            raise RuntimeError("Deletion has not propagated. Reconcile the saved trial ARN.")
+        require(self.member() is None, "A plan appeared while rolling back")
+        self.resources.pop("traffic_acl", None)
+        details["unenrolled_acl_cleanup"] = {"arn": arn, "status": "verified-absent",
+                                             "checked_at": datetime.now(timezone.utc).isoformat()}
         self.d.save()
-        Recovery(self.d).backup()
+        digests = Recovery(self.d).backup()
+        print(json.dumps({"acl": "verified-absent", "plan": "none", "distribution": "Deployed",
+                          "rate_response_associated": False, "verified_recovery_files": len(digests)}))
 
 
 def main():
