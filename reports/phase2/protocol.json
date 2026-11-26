@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "label": "Frozen phase-two four-player replication and table-size sensitivity",
+  "baselineRevision": "03d874f17e52665be59c58731685bf87dfd1485b",
+  "arms": ["threshold-3+clear","guarded-prior","mlp","board","family-nominee","match-mlp-11","match-mlp-29","match-mlp-47","match-tree-11","matched-round-mlp-11"],
+  "nomination": "Use the one family heuristic named by the independent paper-rule development study before examining evaluation outcomes. Freeze its identifier in nomination.json. Model fit 11 is primary; fits 29 and 47 quantify seed sensitivity. The matched-round fit uses the same training observations, sampled alternatives and continuations as match-mlp-11.",
+  "endpoints": {
+    "primary": "Complete-match win credit divided among tied winners, averaged within all seat rotations for each shuffled deal seed.",
+    "secondary": "Average final points of the focal agent. Lower is better.",
+    "independentUnit": "One paired shuffle seed. Every arm gets the same shuffled deals, opponent identities, relative seat order and opening geometry. A seed is confined to one stratum.",
+    "weighting": "Equal weight for each of the four fixed opponent strata within a cohort. Equal weight for every seat rotation. No averaging across player counts or between primary and replication.",
+    "interval": "Two-sided 95% normal interval. For each stratum calculate the sample variance of seed-level paired win-share differences divided by the number of seed blocks. Sum the within-stratum variances with squared stratum weights. No across-stratum variance estimate for these fixed pools.",
+    "decision": "Require an improvement of at least two percentage points and a positive lower 95% paired bound in both primary and confirmation. The family nominee compares against threshold-3+clear. The primary match model (seed 11) must pass against threshold-3+clear, the strongest board-only heuristic on the v1 final benchmark, and against both the guard-only prior and original MLP. This is an intersection test. Other fits, tree, matched-round control, individual strata and other player counts are diagnostic. Failure to clear a gate yields no promotion."
+  },
+  "cohorts": {
+    "primary": {"seats":4,"baseSeed":8300000,"stride":10000,"perStratum":768,"pools":"primary"},
+    "confirmation": {"seats":4,"baseSeed":8400000,"stride":10000,"perStratum":384,"pools":"confirmation"},
+    "duel": {"seats":2,"baseSeed":8350000,"stride":1000,"perStratum":96,"pools":"primary"},
+    "six": {"seats":6,"baseSeed":8360000,"stride":1000,"perStratum":96,"pools":"confirmation"}
+  },
+  "pools": {
+    "primary": {
+      "published-house": ["threshold-3+clear+pairs","threshold-4+clear","threshold-6"],
+      "positional": ["board","table","mlp"],
+      "finish-and-chase": ["study-finisher","study-chaser","threshold-5+clear"],
+      "count-and-gap": ["counter","study-gap","threshold-2+clear"]
+    },
+    "confirmation": {
+      "changed-house": ["threshold-2+clear+pairs","threshold-5+clear","threshold-4"],
+      "learned-and-table": ["tree","mlp","table"],
+      "deny-and-finish": ["study-denial","study-finisher","study-gap"],
+      "patient-and-chase": ["study-patient","study-chaser","counter"]
+    }
+  },
+  "opponents": {
+    "study-finisher": "Complete an available column; otherwise use incoming cards up to 7 on hidden slots and flip after declining a blind draw. Reveals unknown cards whenever practical.",
+    "study-chaser": "Clear any column; otherwise use a card of 3 or more to make a vertical pair in a compatible hidden slot, or a visible slot whose value it lowers. Otherwise play keep 2 or lower, replacing a visible 5 or higher before a hidden slot.",
+    "study-gap": "Prioritize positive immediate clears. Take a reduction of five points or more regardless of incoming value; otherwise use a card at most 2 on a hidden slot and reveal after a rejected draw.",
+    "study-denial": "Play the gap heuristic, bypassing exchanges that give the clockwise opponent an instant positive clear when another move is possible. Allow immediate clearing exchanges because the cleared card is then on top.",
+    "study-patient": "Play keep 3 with opportunistic nonnegative clears; delay taking a final hidden slot if its expected finish would tie or lose the lead, and the source card can instead safely reduce a visible card. On blind draws without a safer exchange, reveal as usual."
+  },
+  "openings": "All seats reveal slot 0 and slot 3. For each seed, cycle the opponent list by seed ordinal and repeat to fill each table. Rotate the full ordered lineup through every seat. Shared deals do not imply identical future trajectories after different actions.",
+  "scope": "All opponent policies are deterministic, simulated and uncalibrated to human play. Held-out opponent styles were designed outside both training and paper-rule selection. These rates are conditional on these explicit populations. No cloud resources."
+}
