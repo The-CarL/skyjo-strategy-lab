@@ -144,8 +144,14 @@ def run():
         assert fresh.json()["game"] is None
         fresh_auth = fresh.request.header_value("authorization")
         assert fresh_auth and fresh_auth != authorization
-        private_game = other.request.get(f"{BASE}/api/games/{game['id']}", headers={"Authorization": fresh_auth})
-        assert private_game.status == 404
+        private_status = other.evaluate(
+            """async ({id, auth}) => {
+                const response = await fetch('/api/games/' + id, {headers: {Authorization: auth}})
+                return response.status
+            }""",
+            {"id": game["id"], "auth": fresh_auth},
+        )
+        assert private_status == 404
         empty = api_response(other, "GET", "/api/history", button(other, "Match history").click)
         assert empty.json()["items"] == []
         button(other, "Recovery key").click()
