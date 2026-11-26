@@ -95,6 +95,8 @@ class Traffic:
         self.dist = row["id"]
         self.arn = row["details"]["arn"]
         self.name = "factory-" + d.scope + "-r-rate"
+        self.response_name = "factory-" + d.scope + "-r-429"
+        require(len(self.response_name) <= 64, "Viewer function name exceeds the CloudFront limit")
         self.query = {"Scope": "CLOUDFRONT", "Name": self.name}
         require(self.arn == f"arn:aws:cloudfront::{d.account}:distribution/{self.dist}", "Distribution ARN mismatch")
         info = aws("cloudfront", "get-distribution", {"Id": self.dist})["Distribution"]
@@ -224,7 +226,7 @@ class Traffic:
         print(json.dumps({"rules": len(full) if restore else len(minimal), "enforcing": False}))
 
     def response_function(self):
-        name = self.name + "-response"
+        name = self.response_name
         code = Path(__file__).with_name("traffic-response.js").read_bytes()
         digest = hashlib.sha256(code).hexdigest()
         params = {"Name": name, "FunctionConfig": {"Runtime": "cloudfront-js-2.0",
@@ -286,18 +288,18 @@ class Traffic:
         acl = self.acl()["WebACL"]
         filters = {"Namespace": "AWS/WAFV2", "MetricName": "CountedRequests"}
         descriptors = []
-        token = None
-        while True:
-            page = aws("cloudwatch", "list-metrics", {**filters, "Dimensions": [{"Name": "WebACL"}],
-                       **({"NextToken": token} if token else {})})
-            for metric in page.get("Metrics", []):
-                dims = {d["Name"]: d["Value"] for d in metric["Dimensions"]}
-                if dims.get("WebACL") in (self.name, acl["VisibilityConfig"]["MetricName"]) and set(dims) in (
-                        {"WebACL", "Rule"}, {"WebACL", "Rule", "Region"}):
-                    descriptors.append(metric)
-            token = page.get("NextToken")
-            if not token:
-                break
+        for value in {self.name, acl["VisibilityConfig"]["MetricName"]}:
+            token = None
+            while True:
+                page = aws("cloudwatch", "list-metrics", {**filters, "Dimensions": [{"Name": "WebACL", "Value": value}],
+                           **({"NextToken": token} if token else {})})
+                for metric in page.get("Metrics", []):
+                    dims = {d["Name"] for d in metric["Dimensions"]}
+                    if dims in ({"WebACL", "Rule"}, {"WebACL", "Rule", "Region"}):
+                        descriptors.append(metric)
+                token = page.get("NextToken")
+                if not token:
+                    break
         for rule in rules(DEFAULT_LIMITS):
             metric = rule["Name"]
             series_matches = [r for r in descriptors if {"Name": "Rule", "Value": metric} in r["Dimensions"]]
@@ -307,8 +309,8 @@ class Traffic:
                 query = {**series_matches[0], "StartTime": begin.isoformat(), "EndTime": end.isoformat(),
                          "Period": 60, "Statistics": ["Sum"]}
                 points = aws("cloudwatch", "get-metric-statistics", query)["Datapoints"]
-            counts = {str(p["Timestamp"])[:16]: int(p["Sum"]) for p in points}
-            series = [counts.get((begin + timedelta(minutes=i)).isoformat()[:16], 0) for i in range(minutes)]
+            counts = {datetime.fromisoformat(p["Timestamp"]).astimezone(timezone.utc): int(p["Sum"]) for p in points}
+            series = [counts.get(begin + timedelta(minutes=i), 0) for i in range(minutes)]
             result[metric] = {"sum": sum(series), "series_discovered": bool(series_matches), "reported_minutes": len(points),
                               "peak_5min_all_viewers": max(sum(series[max(0, i-4):i+1]) for i in range(minutes)),
                               "upper_bound_unaligned_5min": max(sum(series[max(0, i-5):i+1]) for i in range(minutes))}
