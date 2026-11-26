@@ -1,5 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
+import { createRateGuard } from './rate-guard.mjs'
+import { createRateStore } from './rate-store.mjs'
 import { createApi } from './api.mjs'
 import { createDynamoStore } from './store.mjs'
 
@@ -54,10 +58,11 @@ function readPublicAsset(name) {
   return readFileSync(new URL('./public/' + name, import.meta.url), 'utf8')
 }
 
-export function createHandler(store, readAsset = readPublicAsset) {
+export function createHandler(store, readAsset = readPublicAsset, rateGuard) {
   const cache = new Map()
   return createApi({
     store,
+    rateGuard,
     serveAsset: (event) => serveAsset(event, cache, readAsset),
     logError: ({ scope, operation, type }) => console.error(JSON.stringify({ scope, operation, type })),
   })
@@ -70,7 +75,17 @@ export async function handler(event) {
     if (!tableName) {
       return { statusCode: 503, headers: { 'cache-control': 'no-store' }, body: 'Game service is unavailable' }
     }
-    api = createHandler(createDynamoStore({ tableName }))
+    let rateGuard
+    if (process.env.SKYJO_RATE_MODE && process.env.SKYJO_RATE_MODE !== 'off') {
+      // An uncertain response to an atomic increment must not replay that increment.
+      const counters = DynamoDBDocumentClient.from(new DynamoDBClient({ maxAttempts: 1 }))
+      rateGuard = createRateGuard({
+        env: process.env,
+        consume: createRateStore(counters, tableName).consume,
+        log: (event) => console.warn(JSON.stringify(event)),
+      })
+    }
+    api = createHandler(createDynamoStore({ tableName }), readPublicAsset, rateGuard)
   }
   return api(event)
 }

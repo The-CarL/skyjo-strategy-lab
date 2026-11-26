@@ -227,6 +227,7 @@ function finishedSummary(game, view) {
 export function createApi({
   store,
   serveAsset,
+  rateGuard,
   clock = () => new Date().toISOString(),
   seed = () => randomBytes(4).readUInt32LE(),
   logError,
@@ -372,6 +373,16 @@ export function createApi({
           : reply(404, {
               error: { code: 'not_found', message: 'Page not found.' },
             })
+      }
+      if (rateGuard) {
+        const denied = await rateGuard(event.headers, method, path)
+        if (denied) {
+          return reply(
+            denied.status,
+            { error: { code: denied.code, message: denied.message } },
+            { 'retry-after': String(denied.retryAfter) },
+          )
+        }
       }
       if (path === '/api/engines') {
         expectMethod(method, ['GET'])
