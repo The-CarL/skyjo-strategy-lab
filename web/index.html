@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f4f0e3"><title>Skyjo · Table Coach</title><style>/*STYLE*/</style></head>
+<body><header><div class="brand"><span class="mark" aria-hidden="true">♧</span> Skyjo Strategy Lab</div><button id="print">Strategy card ↗</button></header>
+<main><div class="intro"><h1>Table coach<span>.</span></h1><p>Enter your visible cards and the discard to get a move.</p></div>
+<div class="table"><section class="mat" aria-label="Your board"><div class="mat-head"><h2>Your board</h2><span id="known"></span></div><div id="grid"></div><div class="mat-foot"><span id="points"></span><button id="reset">New round</button></div></section>
+<section class="coach" aria-label="Turn advice"><label for="policy">Strategy</label><select id="policy"><option value="family">Family rule · clear, then 3</option><option value="board">Board evaluator</option><option value="tree">Trained decision tree</option><option value="mlp">Trained neural network</option></select>
+<div class="piles"><button id="discard"><span>Top discard</span><strong id="discard-value">+</strong></button><button id="drawn"><span>My blind draw</span><strong id="drawn-value">+</strong></button></div>
+<div class="advice" aria-live="polite"><small>Recommended move</small><h2 id="advice"></h2><p id="reason"></p></div>
+<button class="primary" id="apply"></button><button id="undo">Undo last change</button></section></div>
+</main><footer>Skyjo Strategy Lab <span>Independent tabletop companion</span></footer>
+<dialog id="picker"><h2 id="pick-title"></h2><div id="numbers"></div><div id="special"></div><button id="cancel">Cancel</button></dialog>
+<section id="rulecard"><h1>Skyjo family card</h1><p>Classic Skyjo · Clear, then 3</p><ol>
+<li><b>Take a complete column.</b> If the available card makes three equal numbers vertically, take the clear.</li>
+<li><b>Keep 3 or lower.</b> Replace your highest visible 4 or higher. If you have none, put the low card in a hidden slot.</li>
+<li><b>Pass on the rest.</b> If the discard does neither, draw blind. Apply the same two rules. If you pass on the drawn card, flip a hidden slot.</li>
+</ol><p>For the tested tie-break, use the leftmost column, then the topmost eligible card. Your family can play without tracking other players or counting cards.</p>
+<p><b>Remember the finish.</b> Revealing your last hidden card gives everyone else one final turn. If another player ties or beats your positive round score, yours doubles.</p><button id="back">Back to coach</button><button id="paper">Print card</button></section>
+<script>/*SCRIPT*/</script></body></html>

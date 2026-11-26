@@ -1,0 +1,287 @@
+{
+  "seed": 910000,
+  "seeds": 60,
+  "totalGames": 3360,
+  "duels": [
+    {
+      "first": "threshold-5",
+      "second": "threshold-3+clear",
+      "games": 120,
+      "firstWinShare": 0.08333333333333333,
+      "ci95": [
+        0.03578516170460081,
+        0.13088150496206585
+      ]
+    },
+    {
+      "first": "threshold-5",
+      "second": "board",
+      "games": 120,
+      "firstWinShare": 0.225,
+      "ci95": [
+        0.15348780278664004,
+        0.29651219721336
+      ]
+    },
+    {
+      "first": "threshold-5",
+      "second": "table",
+      "games": 120,
+      "firstWinShare": 0.15,
+      "ci95": [
+        0.0915331471570777,
+        0.2084668528429223
+      ]
+    },
+    {
+      "first": "threshold-5",
+      "second": "counter",
+      "games": 120,
+      "firstWinShare": 0.16666666666666666,
+      "ci95": [
+        0.10652245829730955,
+        0.22681087503602376
+      ]
+    },
+    {
+      "first": "threshold-5",
+      "second": "tree",
+      "games": 120,
+      "firstWinShare": 0.08333333333333333,
+      "ci95": [
+        0.0303859302308968,
+        0.13628073643576985
+      ]
+    },
+    {
+      "first": "threshold-5",
+      "second": "mlp",
+      "games": 120,
+      "firstWinShare": 0.08333333333333333,
+      "ci95": [
+        0.0357851617046008,
+        0.13088150496206585
+      ]
+    },
+    {
+      "first": "threshold-5",
+      "second": "rollout-4",
+      "games": 120,
+      "firstWinShare": 0.6708333333333333,
+      "ci95": [
+        0.5931462558038888,
+        0.7485204108627778
+      ]
+    },
+    {
+      "first": "threshold-3+clear",
+      "second": "board",
+      "games": 120,
+      "firstWinShare": 0.5833333333333334,
+      "ci95": [
+        0.495658836894515,
+        0.6710078297721518
+      ]
+    },
+    {
+      "first": "threshold-3+clear",
+      "second": "table",
+      "games": 120,
+      "firstWinShare": 0.4166666666666667,
+      "ci95": [
+        0.3354163153708884,
+        0.497917017962445
+      ]
+    },
+    {
+      "first": "threshold-3+clear",
+      "second": "counter",
+      "games": 120,
+      "firstWinShare": 0.4625,
+      "ci95": [
+        0.36945246795138,
+        0.5555475320486201
+      ]
+    },
+    {
+      "first": "threshold-3+clear",
+      "second": "tree",
+      "games": 120,
+      "firstWinShare": 0.36666666666666664,
+      "ci95": [
+        0.28311166206055743,
+        0.45022167127277585
+      ]
+    },
+    {
+      "first": "threshold-3+clear",
+      "second": "mlp",
+      "games": 120,
+      "firstWinShare": 0.31666666666666665,
+      "ci95": [
+        0.2395271765100706,
+        0.3938061568232627
+      ]
+    },
+    {
+      "first": "threshold-3+clear",
+      "second": "rollout-4",
+      "games": 120,
+      "firstWinShare": 0.85,
+      "ci95": [
+        0.7915331471570777,
+        0.9084668528429223
+      ]
+    },
+    {
+      "first": "board",
+      "second": "table",
+      "games": 120,
+      "firstWinShare": 0.36666666666666664,
+      "ci95": [
+        0.30562696176577486,
+        0.4277063715675584
+      ]
+    },
+    {
+      "first": "board",
+      "second": "counter",
+      "games": 120,
+      "firstWinShare": 0.425,
+      "ci95": [
+        0.3598399189826156,
+        0.4901600810173844
+      ]
+    },
+    {
+      "first": "board",
+      "second": "tree",
+      "games": 120,
+      "firstWinShare": 0.3416666666666667,
+      "ci95": [
+        0.25933827412523697,
+        0.4239950592080964
+      ]
+    },
+    {
+      "first": "board",
+      "second": "mlp",
+      "games": 120,
+      "firstWinShare": 0.30833333333333335,
+      "ci95": [
+        0.22405092982886726,
+        0.39261573683779943
+      ]
+    },
+    {
+      "first": "board",
+      "second": "rollout-4",
+      "games": 120,
+      "firstWinShare": 0.8583333333333333,
+      "ci95": [
+        0.8008413212786647,
+        0.9158253453880019
+      ]
+    },
+    {
+      "first": "table",
+      "second": "counter",
+      "games": 120,
+      "firstWinShare": 0.5416666666666666,
+      "ci95": [
+        0.478766347953945,
+        0.6045669853793882
+      ]
+    },
+    {
+      "first": "table",
+      "second": "tree",
+      "games": 120,
+      "firstWinShare": 0.5,
+      "ci95": [
+        0.41601318370878404,
+        0.583986816291216
+      ]
+    },
+    {
+      "first": "table",
+      "second": "mlp",
+      "games": 120,
+      "firstWinShare": 0.525,
+      "ci95": [
+        0.4357663829149625,
+        0.6142336170850375
+      ]
+    },
+    {
+      "first": "table",
+      "second": "rollout-4",
+      "games": 120,
+      "firstWinShare": 0.9,
+      "ci95": [
+        0.8489659468955171,
+        0.951034053104483
+      ]
+    },
+    {
+      "first": "counter",
+      "second": "tree",
+      "games": 120,
+      "firstWinShare": 0.4875,
+      "ci95": [
+        0.40987114775700356,
+        0.5651288522429964
+      ]
+    },
+    {
+      "first": "counter",
+      "second": "mlp",
+      "games": 120,
+      "firstWinShare": 0.5333333333333333,
+      "ci95": [
+        0.43696174004741195,
+        0.6297049266192547
+      ]
+    },
+    {
+      "first": "counter",
+      "second": "rollout-4",
+      "games": 120,
+      "firstWinShare": 0.875,
+      "ci95": [
+        0.815044036876018,
+        0.934955963123982
+      ]
+    },
+    {
+      "first": "tree",
+      "second": "mlp",
+      "games": 120,
+      "firstWinShare": 0.39166666666666666,
+      "ci95": [
+        0.3073842631622005,
+        0.4759490701711328
+      ]
+    },
+    {
+      "first": "tree",
+      "second": "rollout-4",
+      "games": 120,
+      "firstWinShare": 0.9666666666666667,
+      "ci95": [
+        0.9348413430374329,
+        0.9984919902959004
+      ]
+    },
+    {
+      "first": "mlp",
+      "second": "rollout-4",
+      "games": 120,
+      "firstWinShare": 0.9583333333333334,
+      "ci95": [
+        0.9230706654836163,
+        0.9935960011830505
+      ]
+    }
+  ]
+}

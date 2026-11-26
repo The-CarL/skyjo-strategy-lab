@@ -1,0 +1,3784 @@
+{
+  "config": {
+    "start": 850000,
+    "count": 120,
+    "players": 4,
+    "pool": [
+      "threshold-5",
+      "threshold-6+clear",
+      "threshold-4+pairs"
+    ],
+    "agents": [
+      "threshold-5",
+      "threshold-4",
+      "threshold-6",
+      "threshold-7",
+      "threshold-5+clear"
+    ]
+  },
+  "totalGames": 2400,
+  "results": [
+    {
+      "name": "threshold-5",
+      "games": 480,
+      "winShare": {
+        "mean": 0.23194444444444445,
+        "ci95": [
+          0.19418050282210475,
+          0.26970838606678416
+        ]
+      },
+      "pairedVsFirst": {
+        "mean": 0,
+        "ci95": [
+          0,
+          0
+        ]
+      },
+      "finalScore": {
+        "mean": 84.92083333333333,
+        "ci95": [
+          82.35586898921443,
+          87.48579767745224
+        ]
+      },
+      "rounds": {
+        "mean": 2.8333333333333335,
+        "ci95": [
+          2.768672579611347,
+          2.89799408705532
+        ]
+      }
+    },
+    {
+      "name": "threshold-4",
+      "games": 480,
+      "winShare": {
+        "mean": 0.3958333333333333,
+        "ci95": [
+          0.3548971882552216,
+          0.43676947841144503
+        ]
+      },
+      "pairedVsFirst": {
+        "mean": 0.16388888888888886,
+        "ci95": [
+          0.11081362136022795,
+          0.2169641564175498
+        ]
+      },
+      "finalScore": {
+        "mean": 67.0875,
+        "ci95": [
+          64.83868846311405,
+          69.33631153688596
+        ]
+      },
+      "rounds": {
+        "mean": 2.8,
+        "ci95": [
+          2.7368476786944886,
+          2.863152321305511
+        ]
+      }
+    },
+    {
+      "name": "threshold-6",
+      "games": 480,
+      "winShare": {
+        "mean": 0.05486111111111111,
+        "ci95": [
+          0.0346344351938042,
+          0.07508778702841802
+        ]
+      },
+      "pairedVsFirst": {
+        "mean": -0.17708333333333334,
+        "ci95": [
+          -0.21591456101054424,
+          -0.13825210565612245
+        ]
+      },
+      "finalScore": {
+        "mean": 108.72916666666667,
+        "ci95": [
+          106.10374479424884,
+          111.3545885390845
+        ]
+      },
+      "rounds": {
+        "mean": 2.595833333333333,
+        "ci95": [
+          2.541378023959919,
+          2.6502886427067476
+        ]
+      }
+    },
+    {
+      "name": "threshold-7",
+      "games": 480,
+      "winShare": {
+        "mean": 0.0125,
+        "ci95": [
+          0.0027102995299080924,
+          0.02228970047009191
+        ]
+      },
+      "pairedVsFirst": {
+        "mean": -0.21944444444444447,
+        "ci95": [
+          -0.25694776794761665,
+          -0.1819411209412723
+        ]
+      },
+      "finalScore": {
+        "mean": 130.15208333333334,
+        "ci95": [
+          127.02010224521096,
+          133.2840644214557
+        ]
+      },
+      "rounds": {
+        "mean": 2.2083333333333335,
+        "ci95": [
+          2.157338011235939,
+          2.259328655430728
+        ]
+      }
+    },
+    {
+      "name": "threshold-5+clear",
+      "games": 480,
+      "winShare": {
+        "mean": 0.2715277777777778,
+        "ci95": [
+          0.2333793075266893,
+          0.3096762480288663
+        ]
+      },
+      "pairedVsFirst": {
+        "mean": 0.03958333333333333,
+        "ci95": [
+          0.00742895566453098,
+          0.07173771100213569
+        ]
+      },
+      "finalScore": {
+        "mean": 78.27916666666667,
+        "ci95": [
+          75.76605858234876,
+          80.79227475098457
+        ]
+      },
+      "rounds": {
+        "mean": 2.86875,
+        "ci95": [
+          2.8049717863278087,
+          2.932528213672191
+        ]
+      }
+    }
+  ],
+  "blocks": [
+    {
+      "seed": 850000,
+      "values": [
+        {
+          "win": 0,
+          "score": 89,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.625,
+          "score": 62.5,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 107.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 127.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 65.25,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850001,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 66.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 55.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.08333333333333333,
+          "score": 85.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 102.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 70.75,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850002,
+      "values": [
+        {
+          "win": 0,
+          "score": 100.25,
+          "rounds": 3
+        },
+        {
+          "win": 0.5,
+          "score": 75.75,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 95.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 103.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 76.25,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850003,
+      "values": [
+        {
+          "win": 0,
+          "score": 92,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 56.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 130.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 129.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.375,
+          "score": 79,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850004,
+      "values": [
+        {
+          "win": 0.375,
+          "score": 66,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 79,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 117,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 126,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 62.75,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850005,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 73.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 53.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 98.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 123.5,
+          "rounds": 2
+        },
+        {
+          "win": 0.125,
+          "score": 79.25,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850006,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 77,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.75,
+          "score": 56.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 122.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 126,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 70.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850007,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 98.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 113,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 94.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 143.25,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 94.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850008,
+      "values": [
+        {
+          "win": 0,
+          "score": 61.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.75,
+          "score": 53.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 110,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 119,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 78.25,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850009,
+      "values": [
+        {
+          "win": 0.375,
+          "score": 75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 59.5,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 96,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 117.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.375,
+          "score": 68.75,
+          "rounds": 2.25
+        }
+      ]
+    },
+    {
+      "seed": 850010,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 62.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 54,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 92.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 126,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 81.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850011,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 98.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 91,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 103.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 151.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 74,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850012,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 88.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 51.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 118.25,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 115.5,
+          "rounds": 1.5
+        },
+        {
+          "win": 0.375,
+          "score": 74.25,
+          "rounds": 2.25
+        }
+      ]
+    },
+    {
+      "seed": 850013,
+      "values": [
+        {
+          "win": 0,
+          "score": 71.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.625,
+          "score": 46,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 98.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 130.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 83.75,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850014,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 78.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.75,
+          "score": 71,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 101.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 154.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 72.75,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850015,
+      "values": [
+        {
+          "win": 0,
+          "score": 76,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 60.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 130.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 128.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 70,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850016,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 83.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 74.25,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 102.75,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 151.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 75.25,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850017,
+      "values": [
+        {
+          "win": 0.375,
+          "score": 107.25,
+          "rounds": 3.5
+        },
+        {
+          "win": 0.75,
+          "score": 81.5,
+          "rounds": 3.5
+        },
+        {
+          "win": 0,
+          "score": 127,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 142.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 91.25,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850018,
+      "values": [
+        {
+          "win": 0,
+          "score": 86.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 64.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 122.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 130,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 80.75,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850019,
+      "values": [
+        {
+          "win": 0.75,
+          "score": 61,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.125,
+          "score": 70.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 106.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 114.5,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 74.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850020,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 75.5,
+          "rounds": 3
+        },
+        {
+          "win": 0.5,
+          "score": 65.5,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 100.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 147.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 61.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850021,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 73,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 73.75,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 88,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 107.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 69,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850022,
+      "values": [
+        {
+          "win": 0,
+          "score": 59,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 60.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 136.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 130.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 63,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850023,
+      "values": [
+        {
+          "win": 0,
+          "score": 100.5,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 61.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 101.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 120,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 94,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850024,
+      "values": [
+        {
+          "win": 0,
+          "score": 91.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.5,
+          "score": 57.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 118.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 136,
+          "rounds": 1.75
+        },
+        {
+          "win": 0,
+          "score": 82.75,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850025,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 80.25,
+          "rounds": 3.5
+        },
+        {
+          "win": 0.25,
+          "score": 64.5,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 105.75,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 134.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 73.75,
+          "rounds": 3.5
+        }
+      ]
+    },
+    {
+      "seed": 850026,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 84.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 69.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 124.5,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 112.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 57.75,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850027,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 85.75,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.5,
+          "score": 68.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 105,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 124.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 101.75,
+          "rounds": 3.5
+        }
+      ]
+    },
+    {
+      "seed": 850028,
+      "values": [
+        {
+          "win": 0.375,
+          "score": 75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 59.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 115.5,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 129,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.75,
+          "score": 76,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850029,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 74.25,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 70.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.5,
+          "score": 108.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 116,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 78.5,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850030,
+      "values": [
+        {
+          "win": 0,
+          "score": 95.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 80,
+          "rounds": 3.5
+        },
+        {
+          "win": 0,
+          "score": 108.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 132.75,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 75,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850031,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 81.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 68.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 111.5,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 147,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 68.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850032,
+      "values": [
+        {
+          "win": 0.125,
+          "score": 86.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.875,
+          "score": 55.25,
+          "rounds": 3.5
+        },
+        {
+          "win": 0,
+          "score": 93.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 88.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 55.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850033,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 94.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.75,
+          "score": 70.75,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 118.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 137.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 72.25,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850034,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 95,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 68.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 109,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 111.25,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 93,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850035,
+      "values": [
+        {
+          "win": 0,
+          "score": 77.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 75,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 91.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 131.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 62.75,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850036,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 74.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 60.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 102.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 150.5,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 77.5,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850037,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 76,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 64.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 102.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 128.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 71.25,
+          "rounds": 2.25
+        }
+      ]
+    },
+    {
+      "seed": 850038,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 78.25,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 95.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 83.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 166.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 81.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850039,
+      "values": [
+        {
+          "win": 0,
+          "score": 84,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.375,
+          "score": 47,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 129.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 126.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.125,
+          "score": 64,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850040,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 85.75,
+          "rounds": 3.5
+        },
+        {
+          "win": 0.25,
+          "score": 61.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 119.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 139,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 95.75,
+          "rounds": 3.75
+        }
+      ]
+    },
+    {
+      "seed": 850041,
+      "values": [
+        {
+          "win": 0,
+          "score": 77.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 68,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 77,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 138.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 81.75,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850042,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 86.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 1,
+          "score": 43.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 105.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 129.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 85.5,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850043,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 88.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 65.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 137.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 174.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.125,
+          "score": 90.25,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850044,
+      "values": [
+        {
+          "win": 0,
+          "score": 78,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 54,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 139.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 146.25,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 70.5,
+          "rounds": 2.25
+        }
+      ]
+    },
+    {
+      "seed": 850045,
+      "values": [
+        {
+          "win": 0,
+          "score": 103,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 54.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 106,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 129,
+          "rounds": 1.5
+        },
+        {
+          "win": 0,
+          "score": 105.75,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850046,
+      "values": [
+        {
+          "win": 0,
+          "score": 101.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.75,
+          "score": 68.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 121.5,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 137,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 86,
+          "rounds": 3.5
+        }
+      ]
+    },
+    {
+      "seed": 850047,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 77,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.75,
+          "score": 72.5,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 101.75,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 171.5,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 53.5,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850048,
+      "values": [
+        {
+          "win": 0,
+          "score": 104,
+          "rounds": 3
+        },
+        {
+          "win": 0.5,
+          "score": 55.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 113.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 113.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 104.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850049,
+      "values": [
+        {
+          "win": 0,
+          "score": 75.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 77.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 117,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 139.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 69.5,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850050,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 72,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 78.5,
+          "rounds": 3.5
+        },
+        {
+          "win": 0.25,
+          "score": 101.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 132.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 68.25,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850051,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 81.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 72.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 89.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 128,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 71.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850052,
+      "values": [
+        {
+          "win": 0,
+          "score": 132,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 102.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 119.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 141.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 123.25,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850053,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 73.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 76.75,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 82.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 92.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 71,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850054,
+      "values": [
+        {
+          "win": 0.08333333333333333,
+          "score": 95.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 71.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 124.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 128.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.08333333333333333,
+          "score": 83,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850055,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 83.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 77.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 133.5,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 146.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 80,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850056,
+      "values": [
+        {
+          "win": 0,
+          "score": 86.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.5,
+          "score": 75,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 117.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 124.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 80,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850057,
+      "values": [
+        {
+          "win": 0,
+          "score": 109,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 46.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 124,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 147,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 107.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850058,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 79.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.5,
+          "score": 72.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 104.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 126,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 56.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850059,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 96.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 68.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 109.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 144,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 90.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850060,
+      "values": [
+        {
+          "win": 0,
+          "score": 98.5,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 66.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 129,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 132,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 96,
+          "rounds": 3.5
+        }
+      ]
+    },
+    {
+      "seed": 850061,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 50.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 62.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 104,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 102.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 43.5,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850062,
+      "values": [
+        {
+          "win": 0.375,
+          "score": 86,
+          "rounds": 3
+        },
+        {
+          "win": 0.5,
+          "score": 89.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 75.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 119.25,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 79.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850063,
+      "values": [
+        {
+          "win": 0,
+          "score": 92.25,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 66.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 118.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 124,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 84.25,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850064,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 74.25,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 68.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 95.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 96.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 94.25,
+          "rounds": 3.5
+        }
+      ]
+    },
+    {
+      "seed": 850065,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 109,
+          "rounds": 3.5
+        },
+        {
+          "win": 0.5,
+          "score": 69.75,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 99,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 145.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.625,
+          "score": 75.75,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850066,
+      "values": [
+        {
+          "win": 0,
+          "score": 100.75,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 89.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 129,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 163.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 89.75,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850067,
+      "values": [
+        {
+          "win": 0.75,
+          "score": 68.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.75,
+          "score": 66.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 111.75,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 138.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 64.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850068,
+      "values": [
+        {
+          "win": 0.375,
+          "score": 93.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 57.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 106,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 141.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 89.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850069,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 73.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 45,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 115.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 158.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 81.25,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850070,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 97,
+          "rounds": 3.5
+        },
+        {
+          "win": 0,
+          "score": 77.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 100.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 158.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.125,
+          "score": 75.75,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850071,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 89.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.75,
+          "score": 68.5,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 103.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 106,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 69.75,
+          "rounds": 2.25
+        }
+      ]
+    },
+    {
+      "seed": 850072,
+      "values": [
+        {
+          "win": 0,
+          "score": 106.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 50.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 106.25,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 131,
+          "rounds": 2
+        },
+        {
+          "win": 0.375,
+          "score": 85,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850073,
+      "values": [
+        {
+          "win": 0,
+          "score": 84.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 80.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 103.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 125,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 80.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850074,
+      "values": [
+        {
+          "win": 0,
+          "score": 81.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 98,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 84.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 148.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 97.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850075,
+      "values": [
+        {
+          "win": 0,
+          "score": 94.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 84.75,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 120.75,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 154,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 69.5,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850076,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 69.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 53.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 74.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 106.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 60.75,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850077,
+      "values": [
+        {
+          "win": 0,
+          "score": 78.5,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 73.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 107.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 103.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 50.25,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850078,
+      "values": [
+        {
+          "win": 0,
+          "score": 105.75,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 72.5,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 104.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 110,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 98.25,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850079,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 74,
+          "rounds": 3
+        },
+        {
+          "win": 0.5,
+          "score": 56.5,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 121.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 131.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 66,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850080,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 61.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.75,
+          "score": 55,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 117.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 135.5,
+          "rounds": 2
+        },
+        {
+          "win": 0.75,
+          "score": 57.25,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850081,
+      "values": [
+        {
+          "win": 0,
+          "score": 86.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 62.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 115.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 126.5,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 80.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850082,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 78.25,
+          "rounds": 3
+        },
+        {
+          "win": 0.75,
+          "score": 56.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 139,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 118.5,
+          "rounds": 2
+        },
+        {
+          "win": 0.625,
+          "score": 65.75,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850083,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 87.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 63,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 111,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 98.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 76,
+          "rounds": 2.25
+        }
+      ]
+    },
+    {
+      "seed": 850084,
+      "values": [
+        {
+          "win": 0,
+          "score": 103.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.75,
+          "score": 38.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 132,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 121.75,
+          "rounds": 1.75
+        },
+        {
+          "win": 0.25,
+          "score": 92.75,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850085,
+      "values": [
+        {
+          "win": 0,
+          "score": 82.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 69.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 98.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 118,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 68.25,
+          "rounds": 2.25
+        }
+      ]
+    },
+    {
+      "seed": 850086,
+      "values": [
+        {
+          "win": 0.75,
+          "score": 78,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.5,
+          "score": 66.5,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 85.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 139,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 81.25,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850087,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 91.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.5,
+          "score": 80.75,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 130.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 141.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 94,
+          "rounds": 3.5
+        }
+      ]
+    },
+    {
+      "seed": 850088,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 91.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.75,
+          "score": 50.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 120.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 167.5,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 77,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850089,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 79.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 71,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 104.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 129.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 78.25,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850090,
+      "values": [
+        {
+          "win": 0,
+          "score": 79,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 59.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 116,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 164,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 73,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850091,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 78.75,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.5,
+          "score": 69.75,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 99,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 130.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 83.75,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850092,
+      "values": [
+        {
+          "win": 0.375,
+          "score": 68.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 58.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 92.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 119.25,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 64.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850093,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 97.75,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.25,
+          "score": 80.5,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 120,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 151.75,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 70.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850094,
+      "values": [
+        {
+          "win": 0,
+          "score": 109.5,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 61.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 122,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 122.25,
+          "rounds": 1.75
+        },
+        {
+          "win": 0,
+          "score": 113.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850095,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 85.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 65.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 81.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 97.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.625,
+          "score": 59.75,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850096,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 106.75,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 87.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 130.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 139.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 100,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850097,
+      "values": [
+        {
+          "win": 0,
+          "score": 92.75,
+          "rounds": 3.75
+        },
+        {
+          "win": 0.5,
+          "score": 80,
+          "rounds": 3.5
+        },
+        {
+          "win": 0,
+          "score": 111,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 131.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 95.75,
+          "rounds": 4
+        }
+      ]
+    },
+    {
+      "seed": 850098,
+      "values": [
+        {
+          "win": 0.75,
+          "score": 57.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 59.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 101.5,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 102.25,
+          "rounds": 2
+        },
+        {
+          "win": 0.75,
+          "score": 58.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850099,
+      "values": [
+        {
+          "win": 0,
+          "score": 112.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 65.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 125.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 155,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 89.75,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850100,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 64.25,
+          "rounds": 3
+        },
+        {
+          "win": 0.5,
+          "score": 57.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 107,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 115,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 56.75,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850101,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 56.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 65.75,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 99.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 131.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 63,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850102,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 99.5,
+          "rounds": 3
+        },
+        {
+          "win": 0.25,
+          "score": 55,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 122.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 135,
+          "rounds": 1.75
+        },
+        {
+          "win": 0.5,
+          "score": 85.5,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850103,
+      "values": [
+        {
+          "win": 0,
+          "score": 118,
+          "rounds": 3.5
+        },
+        {
+          "win": 0.25,
+          "score": 76.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 116.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 131.75,
+          "rounds": 1.5
+        },
+        {
+          "win": 0,
+          "score": 108.75,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850104,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 78.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 52.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 83,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 89.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.375,
+          "score": 78.25,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850105,
+      "values": [
+        {
+          "win": 0,
+          "score": 81,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 57.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 111,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 143.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 107.5,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850106,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 76.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 76.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 118.5,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 120.25,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 77.5,
+          "rounds": 2.75
+        }
+      ]
+    },
+    {
+      "seed": 850107,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 75,
+          "rounds": 3
+        },
+        {
+          "win": 0.75,
+          "score": 52.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.25,
+          "score": 82,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 145.25,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 72,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850108,
+      "values": [
+        {
+          "win": 0,
+          "score": 103.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 70,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 115.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 132.75,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 96.25,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850109,
+      "values": [
+        {
+          "win": 0,
+          "score": 102.75,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.625,
+          "score": 63,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 111.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 145.5,
+          "rounds": 1.75
+        },
+        {
+          "win": 0.25,
+          "score": 89.75,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850110,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 70,
+          "rounds": 3
+        },
+        {
+          "win": 0.5,
+          "score": 79,
+          "rounds": 3.5
+        },
+        {
+          "win": 0,
+          "score": 104.5,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 130.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 77.5,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850111,
+      "values": [
+        {
+          "win": 0,
+          "score": 112.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.25,
+          "score": 57,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 93,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 120,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 82.75,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850112,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 84,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 76.75,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 110,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 144.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 77,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850113,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 82.5,
+          "rounds": 3
+        },
+        {
+          "win": 0.5,
+          "score": 76.25,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 111,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 101.75,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.5,
+          "score": 79.25,
+          "rounds": 3
+        }
+      ]
+    },
+    {
+      "seed": 850114,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 90,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 59,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 122,
+          "rounds": 2
+        },
+        {
+          "win": 0,
+          "score": 121.25,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 74.5,
+          "rounds": 2.25
+        }
+      ]
+    },
+    {
+      "seed": 850115,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 67,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 56.25,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 96,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 126.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.25,
+          "score": 79.5,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850116,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 84.25,
+          "rounds": 1.75
+        },
+        {
+          "win": 0.25,
+          "score": 64,
+          "rounds": 2.5
+        },
+        {
+          "win": 0,
+          "score": 116.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0,
+          "score": 127.75,
+          "rounds": 2.25
+        },
+        {
+          "win": 0.5,
+          "score": 68.25,
+          "rounds": 1.75
+        }
+      ]
+    },
+    {
+      "seed": 850117,
+      "values": [
+        {
+          "win": 0.25,
+          "score": 95,
+          "rounds": 2.5
+        },
+        {
+          "win": 0.25,
+          "score": 90.5,
+          "rounds": 3.25
+        },
+        {
+          "win": 0,
+          "score": 117.75,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 133.75,
+          "rounds": 2
+        },
+        {
+          "win": 0.25,
+          "score": 81.5,
+          "rounds": 2.5
+        }
+      ]
+    },
+    {
+      "seed": 850118,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 75.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.25,
+          "score": 74.5,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 98.25,
+          "rounds": 2.75
+        },
+        {
+          "win": 0,
+          "score": 122.25,
+          "rounds": 2
+        },
+        {
+          "win": 0.5,
+          "score": 70.5,
+          "rounds": 3.25
+        }
+      ]
+    },
+    {
+      "seed": 850119,
+      "values": [
+        {
+          "win": 0.5,
+          "score": 79.25,
+          "rounds": 3.25
+        },
+        {
+          "win": 0.5,
+          "score": 67.25,
+          "rounds": 3.75
+        },
+        {
+          "win": 0,
+          "score": 85.5,
+          "rounds": 3
+        },
+        {
+          "win": 0,
+          "score": 119,
+          "rounds": 2.75
+        },
+        {
+          "win": 0.5,
+          "score": 59,
+          "rounds": 3
+        }
+      ]
+    }
+  ]
+}

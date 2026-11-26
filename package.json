@@ -1,0 +1,16 @@
+{
+  "name": "skyjo-strategy-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=24"},
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "tsc --noEmit",
+    "build": "node scripts/build.mjs",
+    "tournament": "node scripts/tournament.mjs",
+    "dataset": "node scripts/dataset.mjs",
+    "replay": "node scripts/replay.mjs"
+  },
+  "devDependencies": {"typescript": "5.9.3", "esbuild": "0.28.2"}
+}

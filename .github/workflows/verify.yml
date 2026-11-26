@@ -1,0 +1,29 @@
+name: Verify strategy lab
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check && npm test && npm run build
+      - name: Verify recorded and replayed decisions
+        run: |
+          npm run replay -- --agents threshold-5+open-pair,tree+open-random,board,mlp
+          npm run replay -- --verify work/replay.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exercise the downloaded HTML offline
+        run: |
+          python -m pip install playwright==1.62.0
+          python -m playwright install --with-deps chromium
+          python test/coach_smoke.py
+          python scripts/package.py --verify
