@@ -46,7 +46,14 @@ function fixture({ store = createMemoryStore(), ...overrides } = {}) {
       { expectedRevision: game.revision, requestId: rid, action },
       token,
     )
-  return { request, create, move, store, owner }
+  const abandon = (game, rid = randomUUID(), token = owner) =>
+    request(
+      'POST',
+      '/api/games/' + game.id + '/abandon',
+      { expectedRevision: game.revision, requestId: rid },
+      token,
+    )
+  return { request, create, move, abandon, store, owner }
 }
 const opening = { kind: 'open', slots: [0, 3] }
 function nextAction(game) {
@@ -215,6 +222,152 @@ test('a lost acknowledgement after commit recovers without applying the move twi
   assert.equal((await api.move(game, opening, rid)).status, 503)
   assert.equal((await api.move(game, opening, rid)).json.game.revision, 1)
 })
+test('abandon drops the private state, stays isolated and tolerates duplicate delivery', async () => {
+  const memory = createMemoryStore()
+  let profileHash
+  const api = fixture({
+    store: {
+      ...memory,
+      async create(owner, game) {
+        profileHash = owner
+        return memory.create(owner, game)
+      },
+    },
+  })
+  const createId = randomUUID()
+  const original = (await api.create(createId)).json.game
+  const moveId = randomUUID()
+  const game = (await api.move(original, opening, moveId)).json.game
+  const rid = randomUUID()
+  assert.equal((await api.abandon(game, rid, newKey())).status, 404)
+  assert.equal((await api.abandon(game, rid, null)).status, 401)
+  assert.equal(
+    (await api.abandon(original)).json.error.code,
+    'revision_conflict',
+  )
+  assert.equal(
+    (await api.abandon(game, moveId)).json.error.code,
+    'idempotency_conflict',
+  )
+  const deliveries = await Promise.all([
+    api.abandon(game, rid),
+    api.abandon(game, rid),
+  ])
+  for (const res of deliveries) {
+    assert.equal(res.status, 200)
+    assert.deepEqual(res.json, { game: null })
+  }
+  const stored = await memory.getGame(profileHash, game.id)
+  assert.deepEqual(Object.keys(stored).sort(), [
+    'abandonedAt',
+    'createSignature',
+    'id',
+    'revision',
+  ])
+  assert.equal(stored.revision, game.revision + 1)
+  assert.deepEqual((await api.request('GET', '/api/games/current')).json, {
+    game: null,
+  })
+  assert.deepEqual((await api.request('GET', '/api/history')).json, {
+    items: [],
+    nextCursor: null,
+  })
+  assert.equal((await api.abandon(game)).json.error.code, 'game_abandoned')
+  for (const res of [
+    await api.request('GET', '/api/games/' + game.id),
+    await api.create(createId),
+    await api.move(original, opening, moveId),
+    await api.move(game, nextAction(game)),
+  ]) {
+    assert.equal(res.status, 410)
+    assert.equal(res.json.error.code, 'game_abandoned')
+  }
+  assert.equal(
+    (await api.abandon(original, rid)).json.error.code,
+    'idempotency_conflict',
+  )
+  const newer = (await api.create()).json.game
+  assert.deepEqual((await api.abandon(game, rid)).json, { game: null })
+  assert.equal(
+    (await api.request('GET', '/api/games/current')).json.game.id,
+    newer.id,
+  )
+})
+
+test('a lost abandon acknowledgement can be retried after a different match starts', async () => {
+  const memory = createMemoryStore()
+  let interrupt = true
+  const api = fixture({
+    store: {
+      ...memory,
+      async commit(...args) {
+        const ok = await memory.commit(...args)
+        if (interrupt) {
+          interrupt = false
+          throw Error('simulated response lost')
+        }
+        return ok
+      },
+    },
+  })
+  const old = (await api.create()).json.game
+  const newer = (await api.create()).json.game
+  const rid = randomUUID()
+  assert.equal((await api.abandon(old, rid)).status, 503)
+  assert.deepEqual((await api.abandon(old, rid)).json, { game: null })
+  assert.equal(
+    (await api.request('GET', '/api/games/current')).json.game.id,
+    newer.id,
+  )
+  assert.equal((await api.move(newer, opening)).status, 200)
+})
+
+test('a competing move and abandon share one guarded revision', async () => {
+  for (const abandonFirst of [true, false]) {
+    const api = fixture()
+    const game = (await api.create()).json.game
+    const move = () => api.move(game, opening)
+    const abandon = () => api.abandon(game)
+    const requests = abandonFirst ? [abandon, move] : [move, abandon]
+    const [winner, loser] = await Promise.all(requests.map((send) => send()))
+    assert.equal(winner.status, 200)
+    const current = (await api.request('GET', '/api/games/current')).json.game
+    if (abandonFirst) {
+      assert.equal(loser.json.error.code, 'game_abandoned')
+      assert.equal(current, null)
+    } else {
+      assert.equal(loser.json.error.code, 'revision_conflict')
+      assert.deepEqual(current, winner.json.game)
+    }
+  }
+})
+
+test('current observes a new game created before the old game is abandoned during a read', async () => {
+  const memory = createMemoryStore()
+  let onRead
+  const api = fixture({
+    store: {
+      ...memory,
+      async getGame(owner, id) {
+        if (onRead) {
+          const hook = onRead
+          onRead = null
+          await hook()
+        }
+        return memory.getGame(owner, id)
+      },
+    },
+  })
+  const old = (await api.create()).json.game
+  let newer
+  onRead = async () => {
+    newer = (await api.create()).json.game
+    assert.equal((await api.abandon(old)).status, 200)
+  }
+  const current = await api.request('GET', '/api/games/current')
+  assert.deepEqual(current.json.game, newer)
+})
+
 test('finished matches are immutable and paged newest-first, with tie ranks and round results preserved', async () => {
   const api = fixture(),
     finished = []
@@ -228,6 +381,7 @@ test('finished matches are immutable and paged newest-first, with tie ranks and 
     const frozen = await api.move(game, { kind: 'nextRound' })
     assert.equal(frozen.status, 409)
     assert.equal(frozen.json.error.code, 'game_finished')
+    assert.equal((await api.abandon(game)).json.error.code, 'game_finished')
   }
   const first = await api.request('GET', '/api/history?limit=1')
   assert.equal(first.status, 200)
@@ -331,6 +485,38 @@ test('Dynamo write contract uses one guarded transaction for final state, receip
   assert.equal(calls.at(-1).Limit, 11)
   assert.equal(calls.at(-1).ScanIndexForward, false)
   assert.equal(calls.at(-1).ConsistentRead, true)
+})
+test('Dynamo atomically abandons via a terminal game row and receipt without writing history or current', async () => {
+  let transaction
+  const db = createDynamoStore({
+    tableName: 'sky-test',
+    client: {
+      async send(cmd) {
+        transaction = cmd.input
+        return {}
+      },
+    },
+  })
+  const game = {
+    id: randomUUID(),
+    revision: 2,
+    createSignature: 'create-hash',
+    abandonedAt: '2026-01-01T00:00:00.000Z',
+  }
+  const rid = randomUUID()
+  assert.equal(await db.commit('owner', game, 1, rid, 'abandon-hash'), true)
+  assert.equal(transaction.TransactItems.length, 2)
+  const [state, receipt] = transaction.TransactItems.map((x) => x.Put)
+  assert.equal(state.Item.sk, 'G#' + game.id)
+  assert.equal(state.Item.abandonedAt, game.abandonedAt)
+  assert.deepEqual(state.Item.game, game)
+  assert.equal(state.Item.revision, 2)
+  assert.equal(state.ExpressionAttributeValues[':expected'], 1)
+  assert.match(state.ConditionExpression, /attribute_not_exists\(abandonedAt\)/)
+  assert.match(state.ConditionExpression, /attribute_not_exists\(finishedAt\)/)
+  assert.equal(receipt.Item.sk, 'R#' + game.id + '#' + rid)
+  assert.equal(receipt.Item.signature, 'abandon-hash')
+  assert.equal(receipt.ConditionExpression, 'attribute_not_exists(pk)')
 })
 test('Dynamo cancels conflicting revisions and retries transient transaction conflicts with one token', async () => {
   const makeError = (code) =>

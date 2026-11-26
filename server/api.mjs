@@ -24,6 +24,8 @@ class HttpError extends Error {
 }
 const invalid = (message) => new HttpError(400, 'invalid_request', message)
 const missing = () => new HttpError(404, 'game_not_found', 'Game not found.')
+const abandoned = () =>
+  new HttpError(410, 'game_abandoned', 'This game was abandoned.')
 const mismatch = () =>
   new HttpError(
     409,
@@ -182,6 +184,7 @@ function expectMethod(method, allowed) {
     })
 }
 function gameView(game) {
+  if (game.abandonedAt) throw abandoned()
   return {
     ...publicMatch(game.state),
     id: game.id,
@@ -265,22 +268,29 @@ export function createApi({
     if (!winner) throw unavailable()
     return replay(winner)
   }
-  async function moveGame(owner, id, body) {
-    if (!fields(body, ['requestId', 'expectedRevision', 'action']))
-      throw invalid('Unexpected fields in move request.')
-    const rid = requestId(body.requestId),
-      expected = body.expectedRevision,
-      action = actionData(body.action)
+  async function changeGame(owner, id, body, operation) {
+    const isAbandon = operation === 'abandon'
+    const allowed = ['requestId', 'expectedRevision']
+    if (!isAbandon) allowed.push('action')
+    if (!fields(body, allowed))
+      throw invalid('Unexpected fields in game request.')
+    const rid = requestId(body.requestId)
+    const expected = body.expectedRevision
     if (!Number.isSafeInteger(expected) || expected < 0)
       throw invalid('expectedRevision must be a nonnegative integer.')
-    const signature = hash('move', expected, action)
+    const action = isAbandon ? null : actionData(body.action)
+    const signature = isAbandon
+      ? hash('abandon', expected)
+      : hash('move', expected, action)
     const before = await db('getGame', owner, id)
     if (!before) throw missing()
     async function replayOrReject() {
       const receipt = await db('receipt', owner, id, rid)
       if (receipt !== null && receipt !== signature) throw mismatch()
+      if (isAbandon && receipt === signature) return reply(200, { game: null })
       const latest = await db('getGame', owner, id)
       if (!latest) throw missing()
+      if (latest.abandonedAt) throw abandoned()
       if (receipt === signature) return reply(200, { game: gameView(latest) })
       if (latest.revision !== expected) throw stale()
       if (latest.finishedAt)
@@ -288,8 +298,20 @@ export function createApi({
       // A competing request may still be committing a transaction with this ID.
       throw unavailable()
     }
-    if (before.revision !== expected || before.finishedAt)
+    if (before.revision !== expected || before.finishedAt || before.abandonedAt)
       return replayOrReject()
+    if (isAbandon) {
+      // Retain the create identity and terminal revision so delayed requests cannot resurrect the game.
+      const game = {
+        id,
+        createSignature: before.createSignature,
+        revision: expected + 1,
+        abandonedAt: clock(),
+      }
+      if (await db('commit', owner, game, expected, rid, signature))
+        return reply(200, { game: null })
+      return replayOrReject()
+    }
     const state = applyCommand(before.state, action),
       now = clock()
     const game = { ...before, state, revision: state.revision, updatedAt: now }
@@ -302,6 +324,19 @@ export function createApi({
     if (await db('commit', owner, game, expected, rid, signature, summary))
       return reply(200, { game: view })
     return replayOrReject()
+  }
+  async function currentGame(owner) {
+    let id = await db('currentId', owner)
+    while (id) {
+      const game = await db('getGame', owner, id)
+      if (!game) return null
+      if (!game.abandonedAt) return gameView(game)
+      // A new game can be created between reading the pointer and reading the abandoned game.
+      const latestId = await db('currentId', owner)
+      if (latestId === id) return null
+      id = latestId
+    }
+    return null
   }
   return async function handle(event) {
     try {
@@ -328,9 +363,7 @@ export function createApi({
       }
       if (path === '/api/games/current') {
         expectMethod(method, ['GET'])
-        const id = await db('currentId', owner)
-        const game = id ? await db('getGame', owner, id) : null
-        return reply(200, { game: game ? gameView(game) : null })
+        return reply(200, { game: await currentGame(owner) })
       }
       if (path === '/api/history') {
         expectMethod(method, ['GET'])
@@ -351,12 +384,12 @@ export function createApi({
           nextCursor: page.next ? encodeCursor(owner, page.next) : null,
         })
       }
-      const route = /^\/api\/games\/([^/]+)(\/moves)?$/.exec(path)
+      const route = /^\/api\/games\/([^/]+)(?:\/(moves|abandon))?$/.exec(path)
       if (route && UUID.test(route[1])) {
         const id = route[1].toLowerCase()
         if (route[2]) {
           expectMethod(method, ['POST'])
-          return await moveGame(owner, id, jsonBody(event))
+          return await changeGame(owner, id, jsonBody(event), route[2])
         }
         expectMethod(method, ['GET'])
         const game = await db('getGame', owner, id)

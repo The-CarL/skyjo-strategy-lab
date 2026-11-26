@@ -54,6 +54,7 @@ export function createMemoryStore() {
         !old ||
         old.revision !== expected ||
         old.finishedAt ||
+        old.abandonedAt ||
         a.receipts.has(key)
       )
         return false
@@ -152,6 +153,7 @@ export function createDynamoStore({ tableName, client } = {}) {
     ...key(owner, gameKey(g.id)),
     revision: g.revision,
     game: g,
+    ...(g.abandonedAt ? { abandonedAt: g.abandonedAt } : {}),
     ...(g.finishedAt ? { finishedAt: g.finishedAt } : {}),
   })
   return {
@@ -174,7 +176,7 @@ export function createDynamoStore({ tableName, client } = {}) {
       const items = [
         put(
           row(owner, g),
-          '#rev = :expected AND attribute_not_exists(finishedAt)',
+          '#rev = :expected AND attribute_not_exists(finishedAt) AND attribute_not_exists(abandonedAt)',
           {
             ExpressionAttributeNames: { '#rev': 'revision' },
             ExpressionAttributeValues: { ':expected': expected },
