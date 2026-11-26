@@ -149,7 +149,7 @@ class Domain:
     def distribution(self):
         config = self.config()
         if "distribution" not in self.resources:
-            listings = aws("cloudfront", "list-distributions", {})["DistributionList"].get("Items", [])
+            listings = aws("cloudfront", "list-distributions", {}).get("DistributionList", {}).get("Items", [])
             require(not any(HOST in row.get("Aliases", {}).get("Items", []) for row in listings),
                     "CloudFront hostname already exists; reconcile ownership")
             require(not self.records_at(HOST), "DNS hostname already in use")
