@@ -33,12 +33,12 @@ def scope(name):
     path = lambda text, constraint="EXACTLY": byte_match("UriPath", text, constraint)
     if name == "Api":
         return group("Or", path("/api"), path("/api/", "STARTS_WITH"))
+    post = byte_match("Method", "POST")
     if name == "Starts":
-        resource = group("Or", path("/api/games"), path("/api/games/"))
-    else:
-        resource = group("And", path("/api/games/", "STARTS_WITH"), group("Or", *[
-            path(suffix, "ENDS_WITH") for suffix in ("/moves", "/moves/", "/abandon", "/abandon/")]))
-    return group("And", byte_match("Method", "POST"), resource)
+        return group("And", post, group("Or", path("/api/games"), path("/api/games/")))
+    suffixes = ("/moves", "/moves/", "/abandon", "/abandon/")
+    return group("And", post, path("/api/games/", "STARTS_WITH"),
+                 group("Or", *(path(suffix, "ENDS_WITH") for suffix in suffixes)))
 
 
 def visibility(name):
