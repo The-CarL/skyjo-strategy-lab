@@ -23,7 +23,8 @@ select {
 }
 a:focus-visible,
 button:focus-visible,
-select:focus-visible {
+select:focus-visible,
+summary:focus-visible {
   outline: 3px solid #e69f35;
   outline-offset: 3px;
 }
@@ -221,6 +222,40 @@ h1 span {
   gap: 6px;
   border-top: 1px solid var(--line);
   padding-top: 12px;
+}
+.strategy-field p,
+.strategy-field dd {
+  color: #475a4d;
+  font-size: 14px;
+  line-height: 1.5;
+}
+#coach-strategies summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 12px;
+  color: var(--green);
+  font-weight: 700;
+  font-size: 14px;
+}
+#coach-strategies[open] summary {
+  margin-bottom: 6px;
+}
+#coach-strategy-list {
+  margin: 0;
+}
+#coach-strategy-list dt {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-weight: 700;
+}
+#coach-strategy-list dd {
+  margin: 4px 0 0;
+}
+#coach-strategy-list dd p + p {
+  margin-top: 6px;
+  padding-left: 9px;
+  border-left: 2px solid #b9c5a9;
 }
 .coach select {
   min-height: 44px;

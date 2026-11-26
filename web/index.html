@@ -54,7 +54,13 @@
           <button type="button" id="undo">Undo last change</button>
           <div class="strategy-field">
             <label for="policy">Strategy</label>
-            <select id="policy"></select>
+            <select id="policy" aria-describedby="policy-description"></select>
+            <p id="policy-description"></p>
+            <details id="coach-strategies">
+              <summary>Compare coach strategies</summary>
+              <p>Each strategy sees your board and the card you enter. Face-down cards stay unknown.</p>
+              <dl id="coach-strategy-list"></dl>
+            </details>
           </div>
         </section>
       </div>
