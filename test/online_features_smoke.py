@@ -71,6 +71,35 @@ def check_physical_coach(phone):
     return api_response(phone, "GET", "/api/games/current", phone.locator("#online-nav").click).json()["game"]
 
 
+def check_restore_during_boot(browser, key, game):
+    """Deliver the original guest's current-game response after restoring another guest."""
+    context = browser.new_context()
+    page = context.new_page()
+    delayed = []
+    page.route("**/api/games/current", lambda route: delayed.append(route), times=1)
+    with page.expect_request(lambda r: urlsplit(r.url).path == "/api/games/current"):
+        page.goto(BASE, wait_until="domcontentloaded")
+
+    button(page, "Recovery key").click()
+    page.get_by_label("Recovery key to restore").fill(key)
+    restored = api_response(page, "GET", "/api/games/current", button(page, "Restore key").click)
+    assert restored.json()["game"] == game
+    stage(page, game["phase"])
+    assert len(delayed) == 1
+    stale = api_response(page, "GET", "/api/games/current", delayed[0].continue_)
+    assert stale.json()["game"] is None
+
+    button(page, "Abandon game").click()
+    confirm = button(page, "Abandon and set up a new game")
+    api_response(page, "POST", f"/api/games/{game['id']}/abandon", confirm.click)
+    stage(page, "setup")
+    opponent = page.get_by_label("Opponent 1", exact=True)
+    expect(opponent).to_be_enabled()
+    opponent.select_option("counter")
+    expect(button(page, "Start game")).to_be_enabled()
+    context.close()
+
+
 def run():
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path=os.environ.get("CHROMIUM_PATH") or None, args=["--no-sandbox"])
@@ -89,11 +118,13 @@ def run():
         api_response(desktop, "POST", path + "/moves", lambda: choose_opening(desktop))
         held = api_response(desktop, "POST", path + "/moves", button(desktop, "Draw blind").click).json()["game"]
 
-        phone.goto(BASE)
+        empty = api_response(phone, "GET", "/api/games/current", lambda: phone.goto(BASE))
+        assert empty.json()["game"] is None
         button(phone, "Recovery key").click()
         phone.get_by_label("Recovery key to restore").fill(key)
-        recovered = api_response(phone, "GET", "/api/games/current", button(phone, "Restore key").click).json()["game"]
-        assert recovered == held
+        restored = api_response(phone, "GET", "/api/games/current", button(phone, "Restore key").click)
+        assert restored.request.header_value("authorization") == f"Bearer {key}"
+        assert restored.json()["game"] == held
         stage(phone, "held")
         no_horizontal_scroll(phone)
         seats = phone.locator("#scores .score-row")
@@ -134,6 +165,7 @@ def run():
         # The recovered online identity does not synchronize a physical board to other devices.
         desktop.get_by_role("link", name="Table coach", exact=True).click()
         expect(desktop.locator("#grid .hidden")).to_have_count(12)
+        check_restore_during_boot(browser, key, fresh)
         assert not errors, errors
         browser.close()
         print("Mixed seat selection, two-device recovery, mobile table coaching and abandoning a held turn passed.")

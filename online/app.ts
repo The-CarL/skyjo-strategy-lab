@@ -867,20 +867,29 @@ function acceptGame(next: Game | null) {
     historyEpoch++
   }
 }
-let fetchingCurrent = false
-async function bootstrap() {
-  if (fetchingCurrent) return
-  fetchingCurrent = true
+let catalogRequest: Promise<{ engines: EngineInfo[] }> | undefined
+function fetchCatalog() {
+  catalogRequest ??= api<{ engines: EngineInfo[] }>('/api/engines').finally(
+    () => {
+      catalogRequest = undefined
+    },
+  )
+  return catalogRequest
+}
+let activeBootstrapEpoch: number | undefined
+async function bootstrap(restored?: { game: Game | null }) {
+  if (activeBootstrapEpoch === tableEpoch) return
   const epoch = ++tableEpoch,
     token = key
+  activeBootstrapEpoch = epoch
   loading = true
   bootFailed = false
   notice = ''
   render()
   try {
     const [catalog, current] = await Promise.all([
-      api<{ engines: EngineInfo[] }>('/api/engines'),
-      api<{ game: Game | null }>('/api/games/current', { token }),
+      fetchCatalog(),
+      restored ?? api<{ game: Game | null }>('/api/games/current', { token }),
     ])
     if (epoch !== tableEpoch || token !== key) return
     engines = catalog.engines
@@ -896,7 +905,7 @@ async function bootstrap() {
       notice = message(e)
     }
   } finally {
-    fetchingCurrent = false
+    if (epoch === activeBootstrapEpoch) activeBootstrapEpoch = undefined
     if (epoch === tableEpoch) {
       loading = false
       render()
@@ -1158,7 +1167,7 @@ async function restoreKey() {
     notice = 'Recovery key restored.'
     if (dialog.open) dialog.close()
     render()
-    if (!engines.length) void bootstrap()
+    if (!engines.length) void bootstrap(res)
   } catch (e) {
     feedback(message(e))
   } finally {
