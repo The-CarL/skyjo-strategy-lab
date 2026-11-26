@@ -262,8 +262,12 @@ class Deployment:
                 "Code": {"ZipFile": code}, "Architectures": ["arm64"], "Tags": self.tags})
             self.remember("function", self.lambda_arn, "AWS::Lambda::Function", "role")
         config = self.wait_function()
-        require(all(config.get(k) == v for k, v in settings.items()) and config["Architectures"] == ["arm64"],
+        require(all(config.get(k) == v for k, v in settings.items() if k != "Environment")
+                and config["Architectures"] == ["arm64"]
+                and config["Environment"]["Variables"].get("SKYJO_TABLE") == self.table,
                 "Lambda configuration differs from the approved settings")
+        from origin_rate import validate_release
+        validate_release(self, config, package)
         if config["CodeSha256"] != digest:
             self.mutate("lambda", "update-function-code", {"FunctionName": self.name, "ZipFile": code,
                                                             "RevisionId": config["RevisionId"]})
@@ -279,10 +283,11 @@ class Deployment:
         self.save()
         return asset_hashes
 
-    def probe(self, path):
-        # The history read also exercises the bounded Lambda execution role against DynamoDB.
+    def probe(self, path, viewer=None):
+        # Direct operator invocations bypass CloudFront. TEST-NET is only a synthetic release identity.
+        viewer = viewer or "192.0.2." + str(secrets.randbelow(254) + 1)
         event = {"version": "2.0", "rawPath": path, "requestContext": {"http": {"method": "GET"}},
-                 "headers": {"x-skyjo-profile": secrets.token_urlsafe(32)}}
+                 "headers": {"x-skyjo-profile": secrets.token_urlsafe(32), "x-skyjo-viewer-ip": viewer}}
         with tempfile.TemporaryDirectory(dir=self.path.parent) as tmp:
             output = Path(tmp) / "result"
             invocation = Path(tmp) / "event.json"
