@@ -32,6 +32,26 @@ class OriginTest(unittest.TestCase):
             self.assertEqual(behavior["OriginRequestPolicyId"], ORIGIN_POLICY)
             self.assertIn("POST", behavior["AllowedMethods"]["Items"])
 
+    def test_reconfiguring_edge_keeps_each_api_viewer_function_and_plan_fields(self):
+        fields = {"TargetOriginId": "function", "ViewerProtocolPolicy": "redirect-to-https", "Compress": True}
+        def reference(arn):
+            return {"Quantity": 1, "Items": [{"EventType": "viewer-request", "FunctionARN": arn}]}
+        config = {"WebACLId": "keep", "PriceClass": "PriceClass_All", "Origins": {"Items": [{}]},
+                  "DefaultCacheBehavior": {**fields, "FunctionAssociations": reference("public-only")},
+                  "CacheBehaviors": {"Quantity": 1, "Items": [
+                      {**fields, "PathPattern": "api/*", "FunctionAssociations": reference("protected-api")}]}}
+        resources = {"origin_access": {"id": "oac"}, "static_cache_policy": {"id": "static"}}
+        actual = signed_config(deepcopy(config), resources)
+        self.assertEqual(actual["WebACLId"], "keep")
+        self.assertEqual(actual["PriceClass"], "PriceClass_All")
+        self.assertEqual(actual["DefaultCacheBehavior"]["FunctionAssociations"], reference("public-only"))
+        bare, children = actual["CacheBehaviors"]["Items"]
+        self.assertNotIn("FunctionAssociations", bare)
+        self.assertEqual(children["FunctionAssociations"], reference("protected-api"))
+        config["CacheBehaviors"]["Items"][0]["PathPattern"] = "unrelated/*"
+        with self.assertRaises(RuntimeError):
+            signed_config(config, resources)
+
     def setUp(self):
         self.rows = {"url": {"id": "https://legacy.invalid/"},
             "distribution": {"details": {"arn": "owned-distribution", "signed_origin": True}}}

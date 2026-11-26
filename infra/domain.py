@@ -27,12 +27,21 @@ def signed_config(config, resources):
     origin = config["Origins"]["Items"][0]
     origin["OriginAccessControlId"] = resources["origin_access"]["id"]
     default = config["DefaultCacheBehavior"]
-    dynamic = deepcopy(default)
-    dynamic["CachePolicyId"] = CACHE_POLICY
-    dynamic["OriginRequestPolicyId"] = ORIGIN_POLICY
-    dynamic["AllowedMethods"] = {"Quantity": 7, "Items": METHODS, "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]}}
-    config["CacheBehaviors"] = {"Quantity": 2, "Items": [
-        {**dynamic, "PathPattern": path} for path in ("api", "api/*")]}
+    prior = {item["PathPattern"]: item for item in config.get("CacheBehaviors", {}).get("Items", [])}
+    require(set(prior) <= {"api", "api/*"}, "Unexpected existing cache behaviors; preserve them before updating")
+    behaviors = []
+    for path in ("api", "api/*"):
+        if path in prior:
+            dynamic = deepcopy(prior[path])
+        else:
+            # A viewer function on a public asset must never be implicitly applied to authenticated traffic.
+            dynamic = {k: deepcopy(v) for k, v in default.items()
+                       if k not in ("FunctionAssociations", "LambdaFunctionAssociations")}
+        dynamic.update(PathPattern=path, TargetOriginId=default["TargetOriginId"], CachePolicyId=CACHE_POLICY,
+            OriginRequestPolicyId=ORIGIN_POLICY, AllowedMethods={"Quantity": 7, "Items": METHODS,
+                "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]}})
+        behaviors.append(dynamic)
+    config["CacheBehaviors"] = {"Quantity": len(behaviors), "Items": behaviors}
     static_policy = resources.get("distribution", {}).get("details", {}).get("managed_static")
     default["CachePolicyId"] = MANAGED_STATIC if static_policy else resources["static_cache_policy"]["id"]
     default.pop("OriginRequestPolicyId", None)
