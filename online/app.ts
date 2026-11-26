@@ -567,12 +567,14 @@ function breakdown(g: Game) {
     '<section class="panel end-panel"><div class="row-between"><h2>Round ' +
     r.round +
     ' scores</h2>' +
-    btn(
-      g.phase === 'gameOver' ? 'new' : 'next',
-      g.phase === 'gameOver' ? 'New game' : 'Next round',
-      'primary',
-      busy || !!pending,
-    ) +
+    (page === 'detail' && game && game.phase !== 'gameOver'
+      ? btn('table', 'Resume game', 'primary')
+      : btn(
+          g.phase === 'gameOver' ? 'new' : 'next',
+          g.phase === 'gameOver' ? 'New game' : 'Next round',
+          'primary',
+          busy || !!pending,
+        )) +
     '</div><div class="history-wrap"><table class="data-table"><thead><tr><th>Player</th><th>Cards</th><th>Round</th><th>Total</th></tr></thead><tbody>' +
     g.players
       .map((p, i) => {

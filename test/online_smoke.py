@@ -63,11 +63,16 @@ def complete_match(page, game):
             action = button(page, "Next round").click
         elif phase == "opening":
             action = lambda: choose_opening(page)
+        elif phase == "source" and game["discard"] > 3:
+            action = button(page, "Draw blind").click
         else:
-            assert phase == "source"
-            board = game["players"][0]["board"]
-            button(page, "Take discard").click()
-            action = slot(page, board.index(None)).click
+            if phase == "source":
+                placement = "Take discard"
+            else:
+                assert phase == "held"
+                placement = "Swap drawn card" if game["held"] <= 5 else "Discard and flip"
+            button(page, placement).click()
+            action = slot(page, game["players"][0]["board"].index(None)).click
         new_game = api_response(page, "POST", path, action).json()["game"]
         assert new_game["revision"] == game["revision"] + 1
         game = new_game
@@ -159,7 +164,7 @@ def run():
         no_horizontal_scroll(phone)
         assert not errors, errors
         browser.close()
-        print(f"Hosted mobile and desktop play passed across {len(done['history'])} rounds, "
+        print(f"Hosted mobile and desktop play passed (rounds played: {len(done['history'])}), "
               "including isolated profiles, draw, resume, recovery, and shared history.")
 
 
