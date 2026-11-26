@@ -47,3 +47,4 @@ jobs:
           CHROMIUM_PATH="$(command -v google-chrome)" python test/online_smoke.py
           CHROMIUM_PATH="$(command -v google-chrome)" python test/online_features_smoke.py
           CHROMIUM_PATH="$(command -v google-chrome)" python test/online_guardrails_smoke.py
+          CHROMIUM_PATH="$(command -v google-chrome)" python test/traffic_cache_smoke.py

@@ -20,6 +20,8 @@ The online game saves your progress and results on the server. Return with the s
 
 If the old address shows an AWS access-denied response, keep its browser data. In desktop Chrome or Edge, visit that exact old HTTPS address in the browser profile you used to play. Open Developer Tools → Application → Local storage, select the old origin, and copy the value of `skyjo-online-profile-v1`. Paste it only into the recovery form on the game site. The physical coach stores its board separately. You can finish it in an old open tab or tap the visible cards into the [phone coach](https://skyjo.carloperottino.com/coach).
 
+The [owner’s traffic controls](infra/traffic.md) cover the sustained-throttling alarm, rate limits and how to pause only new games during an incident.
+
 For local development, run `npm ci` and `npm run online:dev`, then open `http://127.0.0.1:4175/`. The development server keeps test games in memory for the lifetime of the process. `npm run online:package` produces the server and browser assets together in `online-dist/skyjo-online.zip`.
 
 ## Run the lab
