@@ -42,11 +42,14 @@ def run_git(*args):
 
 
 def aws(service, operation, payload, extra=()):
-    command = ["aws", service, operation, "--no-cli-pager", "--output", "json",
-               "--cli-connect-timeout", "5", "--cli-read-timeout", "30",
-               "--cli-input-json", "file:///dev/stdin", *extra]
-    process = subprocess.run(command, input=json.dumps(payload), text=True,
-                             capture_output=True, timeout=45)
+    # Use a real mode-0600 file. The factory CLI transport does not forward piped stdin.
+    with tempfile.NamedTemporaryFile(mode="w", encoding="utf8", suffix=".json") as request:
+        json.dump(payload, request)
+        request.flush()
+        command = ["aws", service, operation, "--no-cli-pager", "--output", "json",
+                   "--cli-connect-timeout", "5", "--cli-read-timeout", "30",
+                   "--cli-input-json", "file://" + request.name, *extra]
+        process = subprocess.run(command, text=True, capture_output=True, timeout=45)
     if process.returncode:
         match = re.search(r"An error occurred \(([^)]+)\)", process.stderr)
         code = match.group(1) if match else "CLIError"
