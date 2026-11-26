@@ -65,10 +65,16 @@ class TrafficAlarm:
         attrs = self.topic_attributes()
         if not self.d.has("traffic_topic"):
             require(attrs is None, "Topic name already exists without an ownership receipt")
-            result = self.d.mutate("sns", "create-topic", {"Name": self.topic_name, "Tags": self.d.tag_pairs(),
-                "Attributes": {"Policy": json.dumps(self.policy)}})
+            result = self.d.mutate("sns", "create-topic", {"Name": self.topic_name, "Tags": self.d.tag_pairs()})
             require(result["TopicArn"] == self.topic, "Unexpected new topic")
             self.d.remember("traffic_topic", self.topic, "AWS::SNS::Topic", "function")
+            attrs = self.topic_attributes()
+        self.d.verify("traffic_topic", aws("sns", "list-tags-for-resource", {"ResourceArn": self.topic})["Tags"])
+        require(attrs and attrs["TopicArn"] == self.topic and not attrs.get("KmsMasterKeyId"), "Topic identity or encryption differs")
+        if json.loads(attrs["Policy"]) != self.policy:
+            # The factory owns the topic and has its creation receipt before any policy update.
+            self.d.mutate("sns", "set-topic-attributes", {"TopicArn": self.topic, "AttributeName": "Policy",
+                                                          "AttributeValue": json.dumps(self.policy)})
         self.verify_topic()
 
     def alarm(self):
