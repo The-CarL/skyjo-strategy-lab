@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "frozenBeforeSupplementalEvaluation": true,
+  "purpose": "Select a portable coach mode, independently of research-panel and training outcomes.",
+  "primary": {
+    "seed": 5600000, "blocks": 1200, "seats": 4,
+    "lineups": [
+      ["threshold-3+clear+pairs", "threshold-4+clear", "threshold-6"],
+      ["board", "threshold-5+clear", "threshold-2+clear"]
+    ]
+  },
+  "confirmation": {
+    "seed": 5610000, "blocks": 600, "seats": 4,
+    "lineups": [
+      ["mlp", "table", "threshold-3+clear"],
+      ["tree", "threshold-2+clear+pairs", "threshold-7+clear+pairs"]
+    ]
+  },
+  "distribution": "Alternate the two lineups by seed within each panel; rotate the opponents' cyclic order on each repeated lineup and rotate the focal agent through all four seat positions for each seed.",
+  "baselineNames": ["family", "board", "mlp", "family-nominee", "match-mlp-11"],
+  "primaryPolicies": ["expanded-board", "expanded-urgency"],
+  "portableGate": "Score terminal split win credit. For expanded-board, require a paired mean gain of at least .02 AND lower bound of the nominal two-sided 95% deal-block interval >0 against EVERY baseline in BOTH panels. For expanded-urgency, require the same comparisons plus a gain of at least .02 and lower bound >0 over expanded-board in both panels. No selection based on table-only policy; full table research remains separate. Keep frozen weights regardless.",
+  "shortlistComparison": "On these same held-out deals compare expanded-board and expanded-table against their own fitted coefficients scored over the original four-action shortlist, to isolate the expansion at inference. Shortlisted variants and full-table policy are explanatory contrasts only.",
+  "notes": "Nominal intervals by pre-specified contrast. Games have common seed and every rotation for each agent. The five required baseline tests form a conjunction: a failed contrast prevents promotion. No threshold/weight changes on these panels."
+}

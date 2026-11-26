@@ -1,0 +1,18 @@
+{
+  "purpose": "Evaluate a linear all-legal-action scorer optimized directly for terminal match win credit and isolate the effect of public opponent context.",
+  "primary": "Four seats against threshold-3+clear+pairs, threshold-4+clear, threshold-6; 1200 new seeds starting 5500000",
+  "confirmation": "Four seats against mlp, board, threshold-2+clear+pairs; 600 new seeds starting 5510000",
+  "sensitivity": [
+    "Two seats, 400 seeds starting 5520000",
+    "Six seats, 300 seeds starting 5530000"
+  ],
+  "training": "Two fixed heuristic populations, four seats; common random deals and all seat rotations within generations. Fit six board-only weights by cross-entropy search and validate finalists on disjoint seeds; freeze board weights, then fit three public-context weights the same way.",
+  "metrics": "Split win credit per focal seat. Paired mean differences across independent deal blocks; nominal 95% normal intervals keep all seat rotations in each block.",
+  "controls": {
+    "expanded-board": ["raw-board", "board", "family"],
+    "expanded-table": ["table", "expanded-board"],
+    "expanded-urgency": ["expanded-board"]
+  },
+  "practicalCriterion": "For each predeclared relevant control, require a gain of at least 2 percentage points and a paired interval lower bound greater than zero in the primary and confirmation four-seat panels. Two/six seat panels are sensitivities. No results-driven refits.",
+  "scope": "The expanded-table policy uses all public boards and scores; expanded-urgency exposes to the fitted table model only whether another player has at most one hidden card. It uses the table fit's urgency coefficient and the identical board weights. The full scorer visits each legal move in engine order. Separate evaluation from the matched original-MLP architecture experiment."
+}

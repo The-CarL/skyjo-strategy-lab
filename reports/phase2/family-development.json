@@ -1,0 +1,374 @@
+{
+  "stage": "development",
+  "baseline": "threshold-3+clear",
+  "criterion": "Highest equally weighted mean win share among the seven alternatives. Fixed ID order breaks ties.",
+  "frozen": "family-value-upgrade",
+  "ranks": [
+    {
+      "id": "family-value-upgrade",
+      "meanWinAcrossPools": 0.35960648148148144
+    },
+    {
+      "id": "family-value-clear",
+      "meanWinAcrossPools": 0.346875
+    },
+    {
+      "id": "family-value-position",
+      "meanWinAcrossPools": 0.3450231481481481
+    },
+    {
+      "id": "family-build-pair",
+      "meanWinAcrossPools": 0.3201388888888889
+    },
+    {
+      "id": "family-pair-break",
+      "meanWinAcrossPools": 0.3145833333333334
+    },
+    {
+      "id": "family-drawn-upgrade",
+      "meanWinAcrossPools": 0.30833333333333335
+    },
+    {
+      "id": "family-hidden-first",
+      "meanWinAcrossPools": 0.24131944444444442
+    }
+  ],
+  "tables": [
+    {
+      "pool": [
+        "threshold-3+clear+pairs",
+        "threshold-4+clear",
+        "threshold-6"
+      ],
+      "start": 2600000,
+      "count": 120,
+      "players": 4,
+      "agents": [
+        "threshold-3+clear",
+        "family-value-clear",
+        "family-pair-break",
+        "family-build-pair",
+        "family-drawn-upgrade",
+        "family-hidden-first",
+        "family-value-upgrade",
+        "family-value-position"
+      ],
+      "games": 3840,
+      "raw": "work/phase2/family/develop-published.json",
+      "rows": [
+        {
+          "id": "threshold-3+clear",
+          "win": 0.3489583333333333,
+          "vsBaseline": {
+            "mean": 0,
+            "ci95": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "family-value-clear",
+          "win": 0.37395833333333334,
+          "vsBaseline": {
+            "mean": 0.025,
+            "ci95": [
+              0.002615875723901026,
+              0.04738412427609898
+            ]
+          }
+        },
+        {
+          "id": "family-pair-break",
+          "win": 0.346875,
+          "vsBaseline": {
+            "mean": -0.0020833333333333333,
+            "ci95": [
+              -0.006166666666666669,
+              0.002000000000000002
+            ]
+          }
+        },
+        {
+          "id": "family-build-pair",
+          "win": 0.3572916666666667,
+          "vsBaseline": {
+            "mean": 0.008333333333333333,
+            "ci95": [
+              0.00027026494124927393,
+              0.01639640172541739
+            ]
+          }
+        },
+        {
+          "id": "family-drawn-upgrade",
+          "win": 0.3333333333333333,
+          "vsBaseline": {
+            "mean": -0.015625,
+            "ci95": [
+              -0.05178841501827937,
+              0.02053841501827937
+            ]
+          }
+        },
+        {
+          "id": "family-hidden-first",
+          "win": 0.32083333333333336,
+          "vsBaseline": {
+            "mean": -0.028125,
+            "ci95": [
+              -0.05570227000771523,
+              -0.0005477299922847685
+            ]
+          }
+        },
+        {
+          "id": "family-value-upgrade",
+          "win": 0.3770833333333333,
+          "vsBaseline": {
+            "mean": 0.028125,
+            "ci95": [
+              -0.008488922904957837,
+              0.06473892290495784
+            ]
+          }
+        },
+        {
+          "id": "family-value-position",
+          "win": 0.37395833333333334,
+          "vsBaseline": {
+            "mean": 0.025,
+            "ci95": [
+              -0.013092315626697243,
+              0.06309231562669725
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pool": [
+        "board",
+        "mlp",
+        "threshold-2+clear"
+      ],
+      "start": 2610000,
+      "count": 120,
+      "players": 4,
+      "agents": [
+        "threshold-3+clear",
+        "family-value-clear",
+        "family-pair-break",
+        "family-build-pair",
+        "family-drawn-upgrade",
+        "family-hidden-first",
+        "family-value-upgrade",
+        "family-value-position"
+      ],
+      "games": 3840,
+      "raw": "work/phase2/family/develop-mixed.json",
+      "rows": [
+        {
+          "id": "threshold-3+clear",
+          "win": 0.31666666666666665,
+          "vsBaseline": {
+            "mean": 0,
+            "ci95": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "family-value-clear",
+          "win": 0.340625,
+          "vsBaseline": {
+            "mean": 0.023958333333333335,
+            "ci95": [
+              -0.00419716574354281,
+              0.052113832410209476
+            ]
+          }
+        },
+        {
+          "id": "family-pair-break",
+          "win": 0.31666666666666665,
+          "vsBaseline": {
+            "mean": 0,
+            "ci95": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "family-build-pair",
+          "win": 0.3260416666666667,
+          "vsBaseline": {
+            "mean": 0.009375,
+            "ci95": [
+              -0.003963299473438781,
+              0.02271329947343878
+            ]
+          }
+        },
+        {
+          "id": "family-drawn-upgrade",
+          "win": 0.3229166666666667,
+          "vsBaseline": {
+            "mean": 0.00625,
+            "ci95": [
+              -0.03186989277910151,
+              0.04436989277910151
+            ]
+          }
+        },
+        {
+          "id": "family-hidden-first",
+          "win": 0.23020833333333332,
+          "vsBaseline": {
+            "mean": -0.08645833333333333,
+            "ci95": [
+              -0.12597997385399548,
+              -0.04693669281267118
+            ]
+          }
+        },
+        {
+          "id": "family-value-upgrade",
+          "win": 0.36666666666666664,
+          "vsBaseline": {
+            "mean": 0.05,
+            "ci95": [
+              0.008445582571245946,
+              0.09155441742875406
+            ]
+          }
+        },
+        {
+          "id": "family-value-position",
+          "win": 0.37986111111111115,
+          "vsBaseline": {
+            "mean": 0.06319444444444444,
+            "ci95": [
+              0.015151387680793882,
+              0.111237501208095
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pool": [
+        "table",
+        "counter",
+        "threshold-3+clear+pairs"
+      ],
+      "start": 2620000,
+      "count": 120,
+      "players": 4,
+      "agents": [
+        "threshold-3+clear",
+        "family-value-clear",
+        "family-pair-break",
+        "family-build-pair",
+        "family-drawn-upgrade",
+        "family-hidden-first",
+        "family-value-upgrade",
+        "family-value-position"
+      ],
+      "games": 3840,
+      "raw": "work/phase2/family/develop-observers.json",
+      "rows": [
+        {
+          "id": "threshold-3+clear",
+          "win": 0.275,
+          "vsBaseline": {
+            "mean": 0,
+            "ci95": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "family-value-clear",
+          "win": 0.3260416666666667,
+          "vsBaseline": {
+            "mean": 0.051041666666666666,
+            "ci95": [
+              0.02197528269329322,
+              0.08010805064004012
+            ]
+          }
+        },
+        {
+          "id": "family-pair-break",
+          "win": 0.28020833333333334,
+          "vsBaseline": {
+            "mean": 0.005208333333333333,
+            "ci95": [
+              -0.005792748201435892,
+              0.016209414868102557
+            ]
+          }
+        },
+        {
+          "id": "family-build-pair",
+          "win": 0.27708333333333335,
+          "vsBaseline": {
+            "mean": 0.0020833333333333333,
+            "ci95": [
+              -0.008758989482940302,
+              0.012925656149606968
+            ]
+          }
+        },
+        {
+          "id": "family-drawn-upgrade",
+          "win": 0.26875,
+          "vsBaseline": {
+            "mean": -0.00625,
+            "ci95": [
+              -0.046619175655904274,
+              0.03411917565590428
+            ]
+          }
+        },
+        {
+          "id": "family-hidden-first",
+          "win": 0.17291666666666666,
+          "vsBaseline": {
+            "mean": -0.10208333333333333,
+            "ci95": [
+              -0.1401075398047086,
+              -0.06405912686195805
+            ]
+          }
+        },
+        {
+          "id": "family-value-upgrade",
+          "win": 0.3350694444444444,
+          "vsBaseline": {
+            "mean": 0.06006944444444443,
+            "ci95": [
+              0.015163740444565296,
+              0.10497514844432357
+            ]
+          }
+        },
+        {
+          "id": "family-value-position",
+          "win": 0.28125,
+          "vsBaseline": {
+            "mean": 0.00625,
+            "ci95": [
+              -0.03818367771956621,
+              0.05068367771956621
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
