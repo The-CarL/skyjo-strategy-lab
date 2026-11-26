@@ -2,22 +2,32 @@
 
 Players and the physical coach use [skyjo.carloperottino.com](https://skyjo.carloperottino.com/). Forge links directly to the game. Game creation is the first operation to restrict during an incident. Players already at a table can continue taking turns, recovering a match and reading history while creation is paused.
 
-## Inspect the public rate limits
+## How the live limits work
 
-Run `verify` to read the current AWS subscription, rule mode, thresholds and window. The three limits apply to each public viewer IP over a rolling five-minute window. A household sharing Wi-Fi shares those allowances. AWS estimates the rate and periodically reevaluates it. A brief burst can pass before the rate rule takes effect. [AWS WAF rate tracking](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-caveats.html)
+The CloudFront Function on `/api` and `/api/*` takes the viewer IP from CloudFront and replaces the private forwarding header on every request. Lambda accepts traffic on its URL only from this distribution. The application uses the forwarded address to select a hashed counter in the existing DynamoDB table. A conditional write counts a request before the game handler runs. The address, recovery key and game ID are never stored in the counter. People sharing one public IP share its allowance. Different addresses can occasionally hash to the same counter.
 
-| Request | Initial limit per IP per five minutes |
+| Request | Limit per public IP in each five-minute window |
 | --- | ---: |
 | Start a game | 20 |
 | Submit a move or abandon a game | 600 |
 | All game API requests combined, including reads | 1,200 |
 
-The game page and physical coach are cached at the edge. Using the physical coach after the page loads requires no game API calls. CloudFront signs calls to the origin. Private boards and history bypass the shared cache.
+For calibration, a mobile browser played one four-player match through four rounds on November 26, 2026. In 10 minutes 46 seconds it sent one start, 100 move commands and three reads. Its busiest rolling five minutes contained 49 API requests. The test modeled one person playing three bots on one connection.
+
+The counters reset at clock-aligned five-minute boundaries. Traffic split across two windows can briefly reach twice the stated rate. A limited request receives HTTP 429 and a `Retry-After` delay. A player can retry after that delay without duplicating a move or losing a saved game. The public table and physical coach load from CloudFront’s cache. Once loaded, the physical coach needs no game API calls.
+
+AWS Shield Standard and CloudFront provide network-level DDoS protection. Checks for excessive game requests run inside Lambda, so a rejected API request can still invoke Lambda and consume database capacity. The existing two concurrent Lambda executions and the DynamoDB throughput limits bound how much computing and database work can run at once. A large surge from many distinct addresses can still slow play. The game creation pause below keeps new tables from competing with existing matches during an incident.
+
+The origin limiter adds no monthly service subscription. Normal admitted API requests also write a small counter in the existing table. CloudFront, Lambda, DynamoDB, storage and the sustained-throttling alarm follow their usual prices. For example, 100,000 extra one-unit DynamoDB writes at the US East (N. Virginia) on-demand standard rate cost about $0.06 before allowances. [DynamoDB pricing](https://aws.amazon.com/dynamodb/pricing/on-demand/) · [CloudFront pricing](https://aws.amazon.com/cloudfront/pricing/pay-as-you-go/)
+
+## Inspect or adjust the limits
+
+Run this in an activated Skyjo factory session with the existing private inventory and the tested Lambda ZIP built from the same release. Set `stage=status` for read-only inspection. `count` admits requests and records would-be denials. `enforce` returns 429 to the over-limit caller. `off` turns off origin rate checks. Every stage needs a fresh private operation record.
 
 ```bash
-stage=verify
-run_id="rates-$stage-$(date -u +%Y%m%dT%H%M%SZ)"
-export FACTORY_AWS_EXECUTABLE="$PWD/infra/traffic.py"
+stage=status
+run_id="origin-rates-$stage-$(date -u +%Y%m%dT%H%M%SZ)"
+export FACTORY_AWS_EXECUTABLE="$PWD/infra/origin_rate.py"
 export FACTORY_AWS_EXECUTABLE_SHA256="$(sha256sum "$FACTORY_AWS_EXECUTABLE" | cut -d' ' -f1)"
 factory-aws --exec --record "$SKYJO_OPS/$run_id.jsonl" \
   --output "$SKYJO_OPS/$run_id.result.json" -- "$FACTORY_AWS_EXECUTABLE" \
@@ -25,9 +35,11 @@ factory-aws --exec --record "$SKYJO_OPS/$run_id.jsonl" \
 cat "$SKYJO_OPS/$run_id.result.json"
 ```
 
-Use `baseline` to read the last hour of one-minute WAF counters. Add `--minutes 1440` to inspect the last day. The starts and moves totals include all viewers. They cannot identify one family's traffic. Newly created metrics may take up to 15 minutes to appear in the metric list. Check `series_discovered` and `reported_minutes` before interpreting zeroes. The rate rules use viewer IP internally while the team's CloudWatch metrics contain aggregate counts. WAF request sampling is disabled.
+To change limits, run `count` with `--starts`, `--moves` and `--api`, then run `enforce` on the verified settings. The operator command takes a revision-checked update, checks for a real counter increment and saves its readback in the private inventory. The existing application log group reports `would_limit`, `limited` and `store_unavailable` without player identifiers. Denial logs are sampled to control log volume. A DynamoDB capacity or availability failure returns 503 with a short retry delay.
 
-`count` measures traffic while allowing it through. In `arm`, WAF marks over-limit requests. A viewer-request CloudFront Function returns HTTP 429 with `Retry-After: 300` before they reach Lambda. Only the two API behaviors use the function. `native-block` uses AWS WAF's standard 403 response. Each mode accepts `--starts`, `--moves` and `--api` to tune the limits. Specify all three when changing thresholds, then run `verify` and check that an ordinary player can start or resume a table. Editing a rate rule can reset its rolling estimate. Returning to `count` is the rollback for enforcement. Use a fresh run ID for each stage and serialize changes to the private inventory.
+For a fresh deployment, install the trusted header with `infra/traffic_viewer.py install`, wait for the distribution to finish deploying and verify it with `infra/traffic_viewer.py verify`. Run `infra/origin_rate.py prepare` to add the counter-only DynamoDB policy. Deploy the matching ZIP through `infra/online.py`, run `count`, check ordinary play, then run `enforce`. To retire the header, turn the guard `off` before invoking `infra/traffic_viewer.py detach`. Use the private wrapper and inventory for each stage.
+
+The [optional AWS WAF deployment notes](traffic-waf.md) cover the edge configuration evaluated for this project.
 
 ## Pause or resume new games
 
